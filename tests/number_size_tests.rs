@@ -1,6 +1,6 @@
 #[test]
 fn test_number_sizes() {
-    use config_struct::{FloatSize, Format, IntSize, StructOptions};
+    use edres::{FloatSize, Format, IntSize, StructOptions};
 
     let basic_options = StructOptions {
         generate_load_fns: false,
@@ -74,7 +74,7 @@ fn test_number_sizes() {
                 ..options.clone()
             };
             let generated_code =
-                config_struct::generate_struct_from_source(code, options).unwrap();
+                edres::generate_struct_from_source(code, options).unwrap();
 
             assert!(
                 generated_code.contains(expected_type),
@@ -91,7 +91,7 @@ fn test_number_sizes() {
                 ..options.clone()
             };
             let generated_code =
-                config_struct::generate_struct_from_source(code, options).unwrap();
+                edres::generate_struct_from_source(code, options).unwrap();
 
             assert!(
                 generated_code.contains(expected_type),

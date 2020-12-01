@@ -1,23 +1,23 @@
-config_struct
+edres
 ===
 
 This is a library for converting config files into matching source files at build time.
 
-[![Build Status](https://travis-ci.org/mistodon/config_struct.svg?branch=master)](https://travis-ci.org/mistodon/config_struct)
-[![Crates.io](https://img.shields.io/crates/v/config_struct.svg)](https://crates.io/crates/config_struct)
-[![Docs.rs](https://docs.rs/config_struct/badge.svg)](https://docs.rs/config_struct/0.5.0/config_struct/)
+[![Build Status](https://travis-ci.org/mistodon/edres.svg?branch=master)](https://travis-ci.org/mistodon/edres)
+[![Crates.io](https://img.shields.io/crates/v/edres.svg)](https://crates.io/crates/edres)
+[![Docs.rs](https://docs.rs/edres/badge.svg)](https://docs.rs/edres/0.5.0/edres/)
 
 ## Usage
 
 This library is intended to be used in a `build.rs` file, so it needs to be added to `[build-dependencies]`.
 
 ```toml
-[build-dependencies.config_struct]
+[build-dependencies.edres]
 version = "~0.4.0"
 features = ["toml-parsing"]
 ```
 
-By default, `config_struct` is markup-language-agnostic, so include the relevant feature for whatever language your config file is written in. Choices are:
+By default, `edres` is markup-language-agnostic, so include the relevant feature for whatever language your config file is written in. Choices are:
 
 1.  `json-parsing`
 2.  `ron-parsing`
@@ -29,10 +29,10 @@ By default, `config_struct` is markup-language-agnostic, so include the relevant
 Now in your `build.rs` file, add code like the following:
 
 ```rust
-use config_struct::{Error, StructOptions};
+use edres::{Error, StructOptions};
 
 fn main() -> Result<(), Error> {
-    config_struct::create_config(
+    edres::create_config(
         "config.toml",
         "src/config.rs",
         &StructOptions::default())
@@ -98,10 +98,10 @@ Enum generation works in a similar way to structs, but for the keys of a map.
 
 ```rust
 // build.rs
-use config_struct::{Error, EnumOptions};
+use edres::{Error, EnumOptions};
 
 fn main() -> Result<(), Error> {
-    config_struct::create_enum(
+    edres::create_enum(
         "items.yaml",
         "src/items.rs",
         &EnumOptions::default())

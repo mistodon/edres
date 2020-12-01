@@ -16,8 +16,8 @@ use crate::{
 ///
 /// # Examples
 /// ```rust,no_run
-/// # fn main() -> Result<(), config_struct::Error> {
-/// let code = config_struct::generate_enum("map.toml", &Default::default())?;
+/// # fn main() -> Result<(), edres::Error> {
+/// let code = edres::generate_enum("map.toml", &Default::default())?;
 /// assert!(code.contains("pub struct Key"));
 /// # Ok(())
 /// # }
@@ -41,10 +41,10 @@ pub fn generate_enum<P: AsRef<Path>>(
 ///
 /// # Examples
 /// ```rust
-/// # fn main() -> Result<(), config_struct::Error> {
-/// use config_struct::{EnumOptions, Format};
+/// # fn main() -> Result<(), edres::Error> {
+/// use edres::{EnumOptions, Format};
 ///
-/// let code = config_struct::generate_enum_from_source(
+/// let code = edres::generate_enum_from_source(
 ///     "[KeyOne]\n[KeyTwo]\n",
 ///     &EnumOptions {
 ///         format: Some(Format::Toml),
@@ -119,10 +119,10 @@ fn generate_enum_from_source_with_filepath(
 /// # Examples
 ///
 /// ```rust,no_run
-/// # fn main() -> Result<(), config_struct::Error> {
-/// use config_struct::EnumOptions;
+/// # fn main() -> Result<(), edres::Error> {
+/// use edres::EnumOptions;
 ///
-/// config_struct::create_enum("map.toml", "src/keys.rs", &EnumOptions::default())?;
+/// edres::create_enum("map.toml", "src/keys.rs", &EnumOptions::default())?;
 /// # Ok(())
 /// # }
 /// ```
@@ -147,10 +147,10 @@ pub fn create_enum<SrcPath: AsRef<Path>, DstPath: AsRef<Path>>(
 /// # Examples
 ///
 /// ```rust,no_run
-/// # fn main() -> Result<(), config_struct::Error> {
-/// use config_struct::{Format, StructOptions};
+/// # fn main() -> Result<(), edres::Error> {
+/// use edres::{Format, StructOptions};
 ///
-/// config_struct::create_struct_from_source(
+/// edres::create_struct_from_source(
 ///     "number = 100  # This is valid TOML.",
 ///     "src/config.rs",
 ///     &StructOptions {

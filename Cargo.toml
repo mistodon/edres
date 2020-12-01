@@ -1,18 +1,18 @@
 [package]
-name = "config_struct"
+name = "edres"
 version = "0.5.0"
 authors = ["***Realname*** ***Lastname*** <***redacted.email@redacted.nope***>"]
 edition = "2018"
 description = "Create struct definitions from config files at build time."
-homepage = "https://github.com/mistodon/config_struct"
-repository = "https://github.com/mistodon/config_struct"
+homepage = "https://github.com/mistodon/edres"
+repository = "https://github.com/mistodon/edres"
 readme = "README.md"
 keywords = ["build", "config", "parsing", "generator"]
 categories = ["config", "parsing"]
 license = "CC0-1.0"
 
 [badges]
-travis-ci = { repository = "mistodon/config_struct", branch = "master" }
+travis-ci = { repository = "mistodon/edres", branch = "master" }
 
 [package.metadata.docs.rs]
 all-features = true

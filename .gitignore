@@ -2,7 +2,7 @@ target/
 **/*.rs.bk
 Cargo.lock
 *.swp
-test_config_struct/src/config/*.rs
-!test_config_struct/src/config/mod.rs
-test_config_struct/tests/config/*.rs
-test_config_struct/tests/temp/*
+test_edres/src/config/*.rs
+!test_edres/src/config/mod.rs
+test_edres/tests/config/*.rs
+test_edres/tests/temp/*

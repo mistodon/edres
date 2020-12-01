@@ -16,8 +16,8 @@ use crate::{
 ///
 /// # Examples
 /// ```rust,no_run
-/// # fn main() -> Result<(), config_struct::Error> {
-/// let code = config_struct::generate_struct("config.toml", &Default::default())?;
+/// # fn main() -> Result<(), edres::Error> {
+/// let code = edres::generate_struct("config.toml", &Default::default())?;
 /// assert!(code.contains("pub struct Config"));
 /// # Ok(())
 /// # }
@@ -38,10 +38,10 @@ pub fn generate_struct<P: AsRef<Path>>(
 ///
 /// # Examples
 /// ```rust
-/// # fn main() -> Result<(), config_struct::Error> {
-/// use config_struct::{StructOptions, Format};
+/// # fn main() -> Result<(), edres::Error> {
+/// use edres::{StructOptions, Format};
 ///
-/// let code = config_struct::generate_struct_from_source(
+/// let code = edres::generate_struct_from_source(
 ///     "number = 100  # This is valid TOML.",
 ///     &StructOptions {
 ///         format: Some(Format::Toml),
@@ -160,10 +160,10 @@ use std::borrow::Cow;\n\n";
 /// # Examples
 ///
 /// ```rust,no_run
-/// # fn main() -> Result<(), config_struct::Error> {
-/// use config_struct::StructOptions;
+/// # fn main() -> Result<(), edres::Error> {
+/// use edres::StructOptions;
 ///
-/// config_struct::create_struct("config.toml", "src/config.rs", &StructOptions::default())?;
+/// edres::create_struct("config.toml", "src/config.rs", &StructOptions::default())?;
 /// # Ok(())
 /// # }
 /// ```
@@ -185,10 +185,10 @@ pub fn create_struct<SrcPath: AsRef<Path>, DstPath: AsRef<Path>>(
 /// # Examples
 ///
 /// ```rust,no_run
-/// # fn main() -> Result<(), config_struct::Error> {
-/// use config_struct::{Format, StructOptions};
+/// # fn main() -> Result<(), edres::Error> {
+/// use edres::{Format, StructOptions};
 ///
-/// config_struct::create_struct_from_source(
+/// edres::create_struct_from_source(
 ///     "number = 100  # This is valid TOML.",
 ///     "src/config.rs",
 ///     &StructOptions {

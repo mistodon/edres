@@ -1,5 +1,5 @@
 fn main() {
-    use config_struct::{DynamicLoading, EnumOptions, StructOptions};
+    use edres::{DynamicLoading, EnumOptions, StructOptions};
 
     std::fs::create_dir_all("src/config").expect("Failed to create config dir.");
 
@@ -26,14 +26,14 @@ fn main() {
     )
     .expect("Failed to copy example_config.json to temp");
 
-    config_struct::create_struct(
+    edres::create_struct(
         "config.json",
         "src/config/json.rs",
         &StructOptions::serde_default(),
     )
     .unwrap();
 
-    config_struct::create_struct(
+    edres::create_struct(
         "config.ron",
         "src/config/ron.rs",
         &StructOptions {
@@ -43,7 +43,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_struct(
+    edres::create_struct(
         "config.toml",
         "src/config/toml.rs",
         &StructOptions {
@@ -53,7 +53,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_struct(
+    edres::create_struct(
         "config.yaml",
         "src/config/yaml.rs",
         &StructOptions {
@@ -64,7 +64,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_struct(
+    edres::create_struct(
         "tests/temp/example_config.json",
         "tests/config/dynamic.rs",
         &StructOptions {
@@ -76,7 +76,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_struct(
+    edres::create_struct(
         "tests/temp/example_config.json",
         "tests/config/dependent.rs",
         &StructOptions {
@@ -88,7 +88,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_struct(
+    edres::create_struct(
         "tests/temp/example_config.json",
         "tests/config/static_config.rs",
         &StructOptions {
@@ -100,14 +100,14 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_enum(
+    edres::create_enum(
         "enum.json",
         "src/config/json_enum.rs",
         &EnumOptions::serde_default(),
     )
     .unwrap();
 
-    config_struct::create_enum(
+    edres::create_enum(
         "enum.ron",
         "src/config/ron_enum.rs",
         &EnumOptions {
@@ -117,7 +117,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_enum(
+    edres::create_enum(
         "enum.toml",
         "src/config/toml_enum.rs",
         &EnumOptions {
@@ -127,7 +127,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::create_enum(
+    edres::create_enum(
         "enum.yaml",
         "src/config/yaml_enum.rs",
         &EnumOptions {
@@ -138,7 +138,7 @@ fn main() {
     )
     .unwrap();
 
-    config_struct::files_enum::create_files_enum(
+    edres::files_enum::create_files_enum(
         "files_enum_files",
         "src/config/files_enum.rs",
         &EnumOptions {

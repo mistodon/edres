@@ -3,12 +3,12 @@
 //! so should be included in your `[build-dependencies]`.
 //!
 //! ```toml
-//! [build-dependencies.config_struct]
+//! [build-dependencies.edres]
 //! version = "~0.4.0"
 //! features = ["toml-parsing"]
 //! ```
 //!
-//! By default, `config_struct` is markup-language-agnostic, so
+//! By default, `edres` is markup-language-agnostic, so
 //! include the relevant feature for whatever language your config
 //! file is written in. Choices are:
 //!
@@ -26,10 +26,10 @@
 //!
 //! ```rust,no_run
 //! // build.rs
-//! use config_struct::{Error, StructOptions};
+//! use edres::{Error, StructOptions};
 //!
 //! fn main() -> Result<(), Error> {
-//!     config_struct::create_struct(
+//!     edres::create_struct(
 //!         "config.toml",
 //!         "src/config.rs",
 //!         &StructOptions::default())
@@ -78,10 +78,10 @@
 //!
 //! ```rust,no_run
 //! // build.rs
-//! use config_struct::{Error, EnumOptions};
+//! use edres::{Error, EnumOptions};
 //!
 //! fn main() -> Result<(), Error> {
-//!     config_struct::create_enum(
+//!     edres::create_enum(
 //!         "items.yaml",
 //!         "src/items.rs",
 //!         &EnumOptions::default())
@@ -174,7 +174,7 @@ mod value;
     feature = "toml-parsing",
     feature = "yaml-parsing"
 )))]
-compile_error!("The config_struct crate requires at least one parsing feature to be enabled:\n {json-parsing, ron-parsing, toml-parsing, yaml-parsing}");
+compile_error!("The edres crate requires at least one parsing feature to be enabled:\n {json-parsing, ron-parsing, toml-parsing, yaml-parsing}");
 
 pub use crate::{
     enums::*,
