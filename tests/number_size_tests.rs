@@ -73,8 +73,7 @@ fn test_number_sizes() {
                 format: Some(format),
                 ..options.clone()
             };
-            let generated_code =
-                edres::generate_struct_from_source(code, options).unwrap();
+            let generated_code = edres::generate_struct_from_source(code, options).unwrap();
 
             assert!(
                 generated_code.contains(expected_type),
@@ -90,8 +89,7 @@ fn test_number_sizes() {
                 format: Some(format),
                 ..options.clone()
             };
-            let generated_code =
-                edres::generate_struct_from_source(code, options).unwrap();
+            let generated_code = edres::generate_struct_from_source(code, options).unwrap();
 
             assert!(
                 generated_code.contains(expected_type),

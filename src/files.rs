@@ -31,4 +31,3 @@ pub fn write_destination(
         Ok(())
     }
 }
-

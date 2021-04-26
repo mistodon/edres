@@ -351,6 +351,7 @@ pub struct EnumOptions {
 }
 
 impl EnumOptions {
+    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn validate(&self) -> Result<(), OptionsError> {
         eprintln!("TODO: EnumOptions::validate");
         Ok(())
@@ -378,8 +379,8 @@ impl EnumOptions {
     }
 }
 
-    /// Defaults to `["Debug", "Clone", "Copy", "PartialEq",
-    /// "Eq", "PartialOrd", "Ord", "Hash"]`
+/// Defaults to `["Debug", "Clone", "Copy", "PartialEq",
+/// "Eq", "PartialOrd", "Ord", "Hash"]`
 impl Default for EnumOptions {
     /// ```rust
     /// use edres::*;

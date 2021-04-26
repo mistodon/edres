@@ -73,7 +73,7 @@ fn generate_struct_from_source_with_filepath(
         None => match filepath {
             Some(path) => Format::from_filename(path)?,
             None => return Err(GenerationError::UnknownInputFormat("<none>".into())),
-        }
+        },
     };
 
     let config = {

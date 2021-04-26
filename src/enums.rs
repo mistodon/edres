@@ -5,7 +5,7 @@ use crate::{
     files,
     format::Format,
     generation,
-    options::{EnumOptions},
+    options::EnumOptions,
     validation,
 };
 
@@ -22,10 +22,7 @@ use crate::{
 /// # Ok(())
 /// # }
 /// ```
-pub fn generate_enum<P: AsRef<Path>>(
-    filepath: P,
-    options: &EnumOptions,
-) -> Result<String, Error> {
+pub fn generate_enum<P: AsRef<Path>>(filepath: P, options: &EnumOptions) -> Result<String, Error> {
     let path = filepath.as_ref();
     let source = std::fs::read_to_string(path)?;
     let output = generate_enum_from_source_with_filepath(&source, options, Some(path))?;
@@ -77,7 +74,7 @@ fn generate_enum_from_source_with_filepath(
         None => match filepath {
             Some(path) => Format::from_filename(path)?,
             None => return Err(GenerationError::UnknownInputFormat("<none>".into())),
-        }
+        },
     };
 
     let keys: Vec<String> = match format {
@@ -99,7 +96,7 @@ fn generate_enum_from_source_with_filepath(
     {
         for key in &keys {
             if !validation::valid_identifier(key) {
-                return Err(GenerationError::InvalidVariantName(key.into()))
+                return Err(GenerationError::InvalidVariantName(key.into()));
             }
         }
     }

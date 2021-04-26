@@ -180,6 +180,6 @@ pub use crate::{
     enums::*,
     error::{Error, GenerationError, OptionsError},
     format::Format,
-    options::{DynamicLoading, FloatSize, IntSize, SerdeSupport, StructOptions, EnumOptions},
+    options::{DynamicLoading, EnumOptions, FloatSize, IntSize, SerdeSupport, StructOptions},
     structs::*,
 };

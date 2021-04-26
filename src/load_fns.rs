@@ -18,7 +18,7 @@ pub fn dynamic_load_impl(format: Format, struct_name: &str, filepath: &Path) -> 
     };
 
     format!(
-r#"impl {struct_name} {{
+        r#"impl {struct_name} {{
     pub fn load() -> Cow<'static, Self> {{
         let filepath = concat!(env!("CARGO_MANIFEST_DIR"), "/{filepath}");
         Self::load_from(filepath.as_ref()).expect("Failed to load {struct_name}.")
@@ -29,12 +29,16 @@ r#"impl {struct_name} {{
         let result: Self = {load_expression}?;
         Ok(Cow::Owned(result))
     }}
-}}"#, struct_name=struct_name, filepath=filepath.display(), load_expression=load_expression)
+}}"#,
+        struct_name = struct_name,
+        filepath = filepath.display(),
+        load_expression = load_expression
+    )
 }
 
 pub fn static_load_impl(struct_name: &str, const_name: &str) -> String {
     format!(
-r#"impl {struct_name} {{
+        r#"impl {struct_name} {{
     #[inline(always)]
     pub fn load() -> Cow<'static, Self> {{
         Cow::Borrowed(&{const_name})
@@ -44,5 +48,8 @@ r#"impl {struct_name} {{
     pub fn load_from(_: &::std::path::Path) -> Result<Cow<'static, Self>, Box<dyn ::std::error::Error>> {{
         Ok(Cow::Borrowed(&{const_name}))
     }}
-}}"#, struct_name=struct_name, const_name=const_name)
+}}"#,
+        struct_name = struct_name,
+        const_name = const_name
+    )
 }
