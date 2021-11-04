@@ -6,7 +6,7 @@ use crate::{
     format::Format,
     generation, load_fns,
     options::{DynamicLoading, StructOptions},
-    validation,
+    parsing, validation,
     value::GenericStruct,
 };
 
@@ -79,16 +79,16 @@ fn generate_struct_from_source_with_filepath(
     let config = {
         let mut root_struct: GenericStruct = match format {
             #[cfg(feature = "json-parsing")]
-            Format::Json => crate::json_parsing::parse_json(source, options)?,
+            Format::Json => parsing::json::parse_json(source, options)?,
 
             #[cfg(feature = "ron-parsing")]
-            Format::Ron => crate::ron_parsing::parse_ron(source, options)?,
+            Format::Ron => parsing::ron::parse_ron(source, options)?,
 
             #[cfg(feature = "toml-parsing")]
-            Format::Toml => crate::toml_parsing::parse_toml(source, options)?,
+            Format::Toml => parsing::toml::parse_toml(source, options)?,
 
             #[cfg(feature = "yaml-parsing")]
-            Format::Yaml => crate::yaml_parsing::parse_yaml(source, options)?,
+            Format::Yaml => parsing::yaml::parse_yaml(source, options)?,
         };
         root_struct.struct_name = options.struct_name.clone();
         root_struct

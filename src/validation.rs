@@ -4,7 +4,7 @@ use crate::{
     value::{GenericStruct, GenericValue},
 };
 
-pub fn valid_identifier(name: &str) -> bool {
+pub(crate) fn valid_identifier(name: &str) -> bool {
     let good_start = name.starts_with(|c: char| c == '_' || (c.is_ascii() && c.is_alphabetic()));
     let good_end = !name
         .contains(|c: char| !(c == '_' || c.is_digit(10) || (c.is_ascii() && c.is_alphabetic())));
@@ -12,7 +12,7 @@ pub fn valid_identifier(name: &str) -> bool {
     good_start && good_end && name != "_"
 }
 
-pub fn validate_struct(struct_value: &GenericStruct) -> Result<(), GenerationError> {
+pub(crate) fn validate_struct(struct_value: &GenericStruct) -> Result<(), GenerationError> {
     for (key, value) in &struct_value.fields {
         validate_field_name(key)?;
         validate_value(key, value)?;

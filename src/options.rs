@@ -1,5 +1,26 @@
 use crate::{error::OptionsError, format::Format, validation};
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WipOptions {
+    pub default_float_size: FloatSize,
+    pub default_int_size: IntSize,
+    pub derived_traits: Vec<String>,
+    pub max_array_size: usize,
+    pub serde_support: SerdeSupport,
+}
+
+impl Default for WipOptions {
+    fn default() -> Self {
+        WipOptions {
+            default_float_size: FloatSize::F64,
+            default_int_size: IntSize::I64,
+            derived_traits: Default::default(),
+            max_array_size: 0,
+            serde_support: Default::default(),
+        }
+    }
+}
+
 /// Options for serde support.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum SerdeSupport {
@@ -74,6 +95,7 @@ pub enum IntSize {
     I16,
     I32,
     I64,
+    I128,
     ISize,
 }
 

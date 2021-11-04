@@ -3,13 +3,13 @@ use crate::{
     value::{GenericStruct, GenericValue},
 };
 
-pub fn generate_structs(struct_value: &GenericStruct, options: &StructOptions) -> String {
+pub(crate) fn generate_structs(struct_value: &GenericStruct, options: &StructOptions) -> String {
     let mut buffer = String::new();
     generate_struct_declarations(&mut buffer, struct_value, options);
     buffer
 }
 
-pub fn generate_enum(variants: &[String], options: &EnumOptions) -> String {
+pub(crate) fn generate_enum(variants: &[String], options: &EnumOptions) -> String {
     use quote::{format_ident, quote};
 
     let first_variant = variants.get(0).map(|name| format_ident!("{}", name));
@@ -200,7 +200,7 @@ pub struct {} {{
 }
 
 // TODO: Shouldn't really need to be public
-pub fn type_string(value: &GenericValue) -> String {
+pub(crate) fn type_string(value: &GenericValue) -> String {
     type_string_with_options(value, 0)
 }
 
@@ -287,7 +287,7 @@ fn value_string(value: &GenericValue, indentation: usize, max_array_size: usize)
     }
 }
 
-pub fn struct_value_string(
+pub(crate) fn struct_value_string(
     value: &GenericStruct,
     indentation: usize,
     max_array_size: usize,

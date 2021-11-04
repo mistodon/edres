@@ -2,6 +2,10 @@ use std::io::Error as IOError;
 
 use thiserror::Error as ErrorTrait;
 
+#[derive(Debug, ErrorTrait)]
+#[error("WIP Error: {0}")]
+pub struct WipError(pub String);
+
 /// An error type for errors while generating config struct modules.
 ///
 /// Errors can either occur during IO (when reading or creating files) or during

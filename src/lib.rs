@@ -140,20 +140,12 @@
 //! this is to have a small efficient type to use as a key into the data stored
 //! in the initial config file.
 
-#[cfg(feature = "json-parsing")]
-mod json_parsing;
-
-#[cfg(feature = "ron-parsing")]
-mod ron_parsing;
-
-#[cfg(feature = "toml-parsing")]
-mod toml_parsing;
-
-#[cfg(feature = "yaml-parsing")]
-mod yaml_parsing;
-
 #[cfg(feature = "experimental-files-enum")]
 pub mod files_enum;
+
+pub mod gen;
+pub mod parsing;
+pub mod value;
 
 mod enums;
 mod structs;
@@ -164,9 +156,7 @@ mod format;
 mod generation;
 mod load_fns;
 mod options;
-mod parsing;
 mod validation;
-mod value;
 
 #[cfg(not(any(
     feature = "json-parsing",
@@ -177,9 +167,9 @@ mod value;
 compile_error!("The edres crate requires at least one parsing feature to be enabled:\n {json-parsing, ron-parsing, toml-parsing, yaml-parsing}");
 
 pub use crate::{
-    enums::*,
+    enums::*, // TODO: not this
     error::{Error, GenerationError, OptionsError},
     format::Format,
     options::{DynamicLoading, EnumOptions, FloatSize, IntSize, SerdeSupport, StructOptions},
-    structs::*,
+    structs::*, // TODO: not this
 };

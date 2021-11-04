@@ -6,7 +6,7 @@ use crate::{
     format::Format,
     generation,
     options::EnumOptions,
-    validation,
+    parsing, validation,
 };
 
 /// Generate Rust source code defining an enum based on a map-like config file.
@@ -79,16 +79,16 @@ fn generate_enum_from_source_with_filepath(
 
     let keys: Vec<String> = match format {
         #[cfg(feature = "json-parsing")]
-        Format::Json => crate::json_parsing::parse_map_keys(source)?,
+        Format::Json => parsing::json::parse_map_keys(source)?,
 
         #[cfg(feature = "ron-parsing")]
-        Format::Ron => crate::ron_parsing::parse_map_keys(source)?,
+        Format::Ron => parsing::ron::parse_map_keys(source)?,
 
         #[cfg(feature = "toml-parsing")]
-        Format::Toml => crate::toml_parsing::parse_map_keys(source)?,
+        Format::Toml => parsing::toml::parse_map_keys(source)?,
 
         #[cfg(feature = "yaml-parsing")]
-        Format::Yaml => crate::yaml_parsing::parse_map_keys(source)?,
+        Format::Yaml => parsing::yaml::parse_map_keys(source)?,
     };
 
     // TODO: Refactor

@@ -1,3 +1,74 @@
+Rewrite
+===
+
+Current API is:
+- create/generate struct/enum (from_source) (8 functions total)
+
+Not very useful as a library. For this to be useful in proc macros, for example, it needs to be able to output quote-like stuff. And for it to be useful for _parts_ of files (instead of just entire files) it needs to accept more structured inputs.
+
+The core of the library is this: data -> rust tokens
+
+The data can be:
+- A source file
+- Source text
+- A (generic) parsed structure
+
+It's a pipeline!
+
+1.  Inputs:
+    - Source text
+    - File -> source text
+2.  Parsing:
+    - json source -> GenericValue
+    - yaml source -> GenericValue
+    - etc...
+3.  Core of the library:
+    - GenericValue -> TokenStream
+        - This could be map -> struct
+        - Or map keys -> enum
+4.  Post-processing:
+    - TokenStream -> string
+    - TokenStream -> file
+
+## Public methods
+
+### source -> source
+- create_struct
+- create_struct_from_source
+- generate_struct
+- generate_struct_from_source
+- create_enum
+- create_enum_from_source
+- generate_enum
+- generate_enum_from_source
+
+### data -> tokens
+- struct_from_map
+- enum_from_map_keys
+- struct_from_map_values
+
+### source -> data
+- parse (format inferred/passed as argument)
+- parse_json
+- parse_yaml
+- etc...
+
+## New config options
+- create extra struct from map values when making enum?
+
+## Tasks
+- NOTE: Have one new Options structs with every possible option,
+    pass it everywhere, then split it along reasonable lines later.
+- [x] pub(crate) everything we can get away with
+- [x] Implement new _public_ GenericValue data type
+- [x] Implement new _public_ parsing functions -> GenericValue
+    - [x] ron
+    - [x] toml
+    - [x] yaml
+    - [x] json
+- [ ] Rewrite the generation code from GenericValue -> TokenStream
+- [ ] Rewrite the public API to use these
+
 Development
 ===
 
