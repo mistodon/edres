@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+cargo fmt
+(cd edres_core && cargo fmt)
+(cd edres_macros && cargo fmt)

@@ -116,10 +116,10 @@ fn define_structs_for_value(
     );
 
     match data {
-        Value::Option(value) => match value {
-            Some(value) => define_structs_for_value(value, root_struct_name, options, dest),
-            None => Ok(()),
-        },
+        Value::Option(Some(value)) => {
+            define_structs_for_value(value, root_struct_name, options, dest)
+        }
+        Value::Option(None) => Ok(()),
         Value::Tuple(values) => {
             for (i, value) in values.iter().enumerate() {
                 let struct_name = format!("{}__{}", root_struct_name, i);
@@ -337,7 +337,7 @@ pub fn define_structs_from_values(
         let const_name = format_ident!("{}", const_name);
         let values = values
             .iter()
-            .map(|value| define_value(value, &options, &struct_name, None, None))
+            .map(|value| define_value(value, options, struct_name, None, None))
             .collect::<Result<Vec<_>, _>>()?;
 
         const_tokens = Some(quote! {
@@ -470,10 +470,14 @@ pub fn define_enum_from_filenames(
         });
     }
 
+    // TODO: Optionally fill
+    let mut values = vec![];
+    let use_values = !values.is_empty();
+
     define_enum_from_variants_and_values(
         filenames.into_iter(),
-        [],
-        false,
+        values,
+        use_values,
         enum_name,
         Some(root),
         options,
@@ -488,6 +492,30 @@ pub fn define_structs_from_file_contents(
     _options: &WipOptions,
 ) -> Result<TokenStream, WipError> {
     todo!()
+    // Like this:
+    // let (value_type, values, new_struct_tokens) =
+    //     establish_types_for_values(data.0.values(), struct_name, options)?;
+
+    // let mut const_tokens = None;
+    // if let Some(const_name) = &options.all_values_const_name {
+    //     let const_name = format_ident!("{}", const_name);
+    //     let values = values
+    //         .iter()
+    //         .map(|value| define_value(value, &options, &struct_name, None, None))
+    //         .collect::<Result<Vec<_>, _>>()?;
+
+    //     const_tokens = Some(quote! {
+    //         pub const #const_name: &'static [#value_type] = &[
+    //             #(#values,)*
+    //         ];
+    //     });
+    // }
+    // let const_tokens = const_tokens.into_iter();
+
+    // Ok(quote! {
+    //     #(#new_struct_tokens)*
+    //     #(#const_tokens)*
+    // })
 }
 
 fn derive_attribute<S: AsRef<str>, I: IntoIterator<Item = S>>(
@@ -534,7 +562,7 @@ fn derive_attribute<S: AsRef<str>, I: IntoIterator<Item = S>>(
         derives.push(format_derive("Debug"));
     }
 
-    (derives.len() > 0).then(|| quote!(#[derive(#(#derives),*)]))
+    (!derives.is_empty()).then(|| quote!(#[derive(#(#derives),*)]))
 }
 
 fn type_of_value<'a>(

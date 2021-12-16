@@ -32,16 +32,16 @@ pub fn parse_source_file(file: &Path, options: &WipOptions) -> Result<Value, Wip
 pub fn parse_source(source: &str, format: Format, options: &WipOptions) -> Result<Value, WipError> {
     match format {
         #[cfg(feature = "json-parsing")]
-        Format::Json => json::parse_source(&source, options),
+        Format::Json => json::parse_source(source, options),
 
         #[cfg(feature = "ron-parsing")]
-        Format::Ron => ron::parse_source(&source, options),
+        Format::Ron => ron::parse_source(source, options),
 
         #[cfg(feature = "toml-parsing")]
-        Format::Toml => toml::parse_source(&source, options),
+        Format::Toml => toml::parse_source(source, options),
 
         #[cfg(feature = "yaml-parsing")]
-        Format::Yaml => yaml::parse_source(&source, options),
+        Format::Yaml => yaml::parse_source(source, options),
     }
 }
 

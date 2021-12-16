@@ -1,0 +1,19 @@
+[package]
+name = "edres_macros"
+version = "0.6.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[features]
+default = []
+json-parsing = ["edres_core/json-parsing"]
+ron-parsing = ["edres_core/ron-parsing"]
+toml-parsing = ["edres_core/toml-parsing"]
+yaml-parsing = ["edres_core/yaml-parsing"]
+
+[dependencies]
+edres_core = { version="=0.6.0", path = "../edres_core" }
+syn = { version="~1.0.82", features=["full"] }
+quote = "~1.0.10"

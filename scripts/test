@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -eu
+set -o pipefail
+
+function ex {
+    local dir=$1
+    shift 1
+    echo -e "\033[36;1m -- ${@} (in $dir)"
+    (cd $dir && $@)
+}
+
+ex . cargo check
+ex edres_core cargo check --features toml-parsing
+ex edres_macros cargo check --features toml-parsing
+
+ex . cargo test --all-features
+ex edres_core cargo test --all-features
+ex edres_macros cargo test --all-features
+
+ex . cargo fmt -- --check
+ex edres_core cargo fmt -- --check
+ex edres_macros cargo fmt -- --check
+
+ex . cargo clippy --all-features -- -D clippy::all
+ex edres_core cargo clippy --all-features -- -D clippy::all
+ex edres_macros cargo clippy --all-features -- -D clippy::all

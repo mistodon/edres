@@ -50,7 +50,7 @@ pub fn parse_value_non_unified(
                 .map(|(key, value)| {
                     let key = key
                         .as_str()
-                        .ok_or(WipError("Could not read key".into()))?
+                        .ok_or_else(|| WipError("Could not read key".into()))?
                         .to_owned();
                     parse_value_non_unified(value, options).map(|value| (key, value))
                 })

@@ -16,6 +16,7 @@ use crate::{
 ///
 /// # Examples
 /// ```rust,no_run
+/// # use edres_core as edres;
 /// # fn main() -> Result<(), edres::Error> {
 /// let code = edres::generate_enum("map.toml", &Default::default())?;
 /// assert!(code.contains("pub struct Key"));
@@ -38,6 +39,7 @@ pub fn generate_enum<P: AsRef<Path>>(filepath: P, options: &EnumOptions) -> Resu
 ///
 /// # Examples
 /// ```rust
+/// # use edres_core as edres;
 /// # fn main() -> Result<(), edres::Error> {
 /// use edres::{EnumOptions, Format};
 ///
@@ -116,6 +118,7 @@ fn generate_enum_from_source_with_filepath(
 /// # Examples
 ///
 /// ```rust,no_run
+/// # use edres_core as edres;
 /// # fn main() -> Result<(), edres::Error> {
 /// use edres::EnumOptions;
 ///
@@ -144,6 +147,7 @@ pub fn create_enum<SrcPath: AsRef<Path>, DstPath: AsRef<Path>>(
 /// # Examples
 ///
 /// ```rust,no_run
+/// # use edres_core as edres;
 /// # fn main() -> Result<(), edres::Error> {
 /// use edres::{Format, StructOptions};
 ///

@@ -341,6 +341,7 @@ impl StructOptions {
     /// to load the config.
     ///
     /// ```rust
+    /// # use edres_core as edres;
     /// use edres::{StructOptions, SerdeSupport};
     ///
     /// let options = StructOptions::serde_default();
@@ -362,6 +363,7 @@ impl StructOptions {
 
 impl Default for StructOptions {
     /// ```rust
+    /// # use edres_core as edres;
     /// use edres::*;
     ///
     /// let default_options = StructOptions {
@@ -502,6 +504,7 @@ impl EnumOptions {
     /// to load the config.
     ///
     /// ```rust
+    /// # use edres_core as edres;
     /// use edres::{EnumOptions, SerdeSupport};
     ///
     /// let options = EnumOptions::serde_default();
@@ -523,6 +526,7 @@ impl EnumOptions {
 /// "Eq", "PartialOrd", "Ord", "Hash"]`
 impl Default for EnumOptions {
     /// ```rust
+    /// # use edres_core as edres;
     /// use edres::*;
     ///
     /// let default_options = EnumOptions {

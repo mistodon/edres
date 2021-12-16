@@ -30,7 +30,29 @@ It's a pipeline!
     - TokenStream -> string
     - TokenStream -> file
 
-## Public methods
+- [ ] define_structs_from_file_contents
+- [ ] in define_enum_from_filenames, optionally produce values too
+    - [ ] but also don't even parse files if not
+- [ ] test the entire gen module (via test crate)
+- [ ] replace the guts of the public API to use gen
+- [ ] delete old generation module (and rename gen to codegen)
+- ...
+- [ ] Delete unused pub(crate) functions in parsing modules
+- [ ] Fix names (parse_whatever2 -> parse_whatever)
+- [ ] Start designing public API:
+    - generate or create (output type)
+    - struct or enum
+    - from_file (default) or from_source or from_files/from_file_names
+    - 2 * 2 * 3 = 12 top-level functions, that's no too bad
+- [ ] Implement proc macro crate
+    - define_structs
+    - define_enums
+    - define_enum_from_dir
+    - define_structs_from_dir
+- [ ] Fix up (and refactor) Option types
+- [ ] Fix up and refactor Error types
+- [ ] Update docs
+- [ ] CI?
 
 ### source -> source
 - create_struct
@@ -55,19 +77,6 @@ It's a pipeline!
 
 ## New config options
 - create extra struct from map values when making enum?
-
-## Tasks
-- NOTE: Have one new Options structs with every possible option,
-    pass it everywhere, then split it along reasonable lines later.
-- [x] pub(crate) everything we can get away with
-- [x] Implement new _public_ GenericValue data type
-- [x] Implement new _public_ parsing functions -> GenericValue
-    - [x] ron
-    - [x] toml
-    - [x] yaml
-    - [x] json
-- [ ] Rewrite the generation code from GenericValue -> TokenStream
-- [ ] Rewrite the public API to use these
 
 Development
 ===
