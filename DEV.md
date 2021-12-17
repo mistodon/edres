@@ -30,7 +30,7 @@ It's a pipeline!
     - TokenStream -> string
     - TokenStream -> file
 
-- [ ] define_structs_from_file_contents
+- [x] define_structs_from_file_contents
 - [ ] in define_enum_from_filenames, optionally produce values too
     - [ ] but also don't even parse files if not
 - [ ] test the entire gen module (via test crate)

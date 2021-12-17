@@ -29,6 +29,19 @@ pub fn parse_source_file(file: &Path, options: &WipOptions) -> Result<Value, Wip
     parse_source(&source, format, options)
 }
 
+pub(crate) fn parse_source_file_with_format(
+    file: &Path,
+    format: Option<Format>,
+    options: &WipOptions,
+) -> Result<Value, WipError> {
+    let source = std::fs::read_to_string(file).map_err(|x| WipError(x.to_string()))?;
+    let format = match format {
+        None => Format::from_filename(file).map_err(|x| WipError(x.to_string()))?,
+        Some(x) => x,
+    };
+    parse_source(&source, format, options)
+}
+
 pub fn parse_source(source: &str, format: Format, options: &WipOptions) -> Result<Value, WipError> {
     match format {
         #[cfg(feature = "json-parsing")]

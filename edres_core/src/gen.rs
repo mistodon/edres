@@ -486,36 +486,54 @@ pub fn define_enum_from_filenames(
 }
 
 pub fn define_structs_from_file_contents(
-    _root: &Path,
-    _enum_name: &str,
-    _format: Option<Format>,
-    _options: &WipOptions,
+    root: &Path,
+    struct_name: &str,
+    format: Option<Format>,
+    options: &WipOptions,
 ) -> Result<TokenStream, WipError> {
-    todo!()
-    // Like this:
-    // let (value_type, values, new_struct_tokens) =
-    //     establish_types_for_values(data.0.values(), struct_name, options)?;
+    use ignore::WalkBuilder;
 
-    // let mut const_tokens = None;
-    // if let Some(const_name) = &options.all_values_const_name {
-    //     let const_name = format_ident!("{}", const_name);
-    //     let values = values
-    //         .iter()
-    //         .map(|value| define_value(value, &options, &struct_name, None, None))
-    //         .collect::<Result<Vec<_>, _>>()?;
+    let values: Vec<Value> = {
+        let walk = WalkBuilder::new(root)
+            .max_depth(Some(1))
+            .sort_by_file_name(std::ffi::OsStr::cmp)
+            .filter_entry(|entry| entry.file_type().map(|ft| ft.is_file()).unwrap_or(false))
+            .build();
 
-    //     const_tokens = Some(quote! {
-    //         pub const #const_name: &'static [#value_type] = &[
-    //             #(#values,)*
-    //         ];
-    //     });
-    // }
-    // let const_tokens = const_tokens.into_iter();
+        walk.into_iter()
+            .skip(1)
+            .map(|entry| {
+                entry
+                    .map_err(|e| WipError(e.to_string()))
+                    .and_then(|entry| {
+                        parsing::parse_source_file_with_format(entry.path(), format, options)
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?
+    };
+    let (value_type, values, new_struct_tokens) =
+        establish_types_for_values(values.iter(), struct_name, options)?;
 
-    // Ok(quote! {
-    //     #(#new_struct_tokens)*
-    //     #(#const_tokens)*
-    // })
+    let mut const_tokens = None;
+    if let Some(const_name) = &options.all_values_const_name {
+        let const_name = format_ident!("{}", const_name);
+        let values = values
+            .iter()
+            .map(|value| define_value(value, &options, &struct_name, None, None))
+            .collect::<Result<Vec<_>, _>>()?;
+
+        const_tokens = Some(quote! {
+            pub const #const_name: &'static [#value_type] = &[
+                #(#values,)*
+            ];
+        });
+    }
+    let const_tokens = const_tokens.into_iter();
+
+    Ok(quote! {
+        #(#new_struct_tokens)*
+        #(#const_tokens)*
+    })
 }
 
 fn derive_attribute<S: AsRef<str>, I: IntoIterator<Item = S>>(
