@@ -1,0 +1,7 @@
+number: 100
+text: yaml
+nested:
+  array:
+    - 1
+    - 2
+    - 3

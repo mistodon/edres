@@ -31,9 +31,10 @@ It's a pipeline!
     - TokenStream -> file
 
 - [x] define_structs_from_file_contents
-- [ ] in define_enum_from_filenames, optionally produce values too
-    - [ ] but also don't even parse files if not
-- [ ] test the entire gen module (via test crate)
+- [x] in define_enum_from_filenames, optionally produce values too
+    - [x] but also don't even parse files if not
+- [x] Move fs tests to the tests folder
+- [x] test the entire gen module (via test crate)
 - [ ] replace the guts of the public API to use gen
 - [ ] delete old generation module (and rename gen to codegen)
 - ...

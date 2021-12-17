@@ -1,0 +1,7 @@
+{
+    "number": 100,
+    "text": "json",
+    "nested": {
+        "array": [1, 2, 3]
+    }
+}

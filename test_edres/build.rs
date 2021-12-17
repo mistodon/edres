@@ -1,150 +1,97 @@
+use edres::{gen, parsing, value::Value, SerdeSupport, WipOptions};
+
 fn main() {
-    use edres::{DynamicLoading, EnumOptions, StructOptions};
+    build().unwrap();
+}
 
-    std::fs::create_dir_all("src/config").expect("Failed to create config dir.");
+fn build() -> Result<(), Box<dyn std::error::Error>> {
+    let dirs = ["json", "toml", "yaml"];
 
-    println!("cargo:rerun-if-changed=config.json");
-    println!("cargo:rerun-if-changed=config.ron");
-    println!("cargo:rerun-if-changed=config.toml");
-    println!("cargo:rerun-if-changed=config.yaml");
-    println!("cargo:rerun-if-changed=enum.json");
-    println!("cargo:rerun-if-changed=enum.ron");
-    println!("cargo:rerun-if-changed=enum.toml");
-    println!("cargo:rerun-if-changed=enum.yaml");
-    println!("cargo:rerun-if-changed=tests/atlernate_config.json");
-    println!("cargo:rerun-if-changed=tests/example_config.json");
+    let options = WipOptions {
+        derived_traits: vec![
+            "Debug".into(),
+            "Clone".into(),
+            "PartialEq".into(),
+            "Hash".into(),
+            "Eq".into(),
+        ]
+        .into(),
+        serde_support: SerdeSupport::Yes,
+        ..WipOptions::default()
+    };
 
-    std::fs::create_dir_all("tests/temp").expect("Failed to create temp test dir.");
-    std::fs::copy(
-        "tests/alternate_config.json",
-        "tests/temp/alternate_config.json",
-    )
-    .expect("Failed to copy alternate_config.json to temp");
-    std::fs::copy(
-        "tests/example_config.json",
-        "tests/temp/example_config.json",
-    )
-    .expect("Failed to copy example_config.json to temp");
+    for dir in dirs {
+        use std::fmt::Write;
 
-    edres::create_struct(
-        "config.json",
-        "src/config/json.rs",
-        &StructOptions::serde_default(),
-    )
-    .unwrap();
+        let mut buffer = String::new();
 
-    edres::create_struct(
-        "config.ron",
-        "src/config/ron.rs",
-        &StructOptions {
-            struct_name: "RonConfig".to_owned(),
-            ..StructOptions::serde_default()
-        },
-    )
-    .unwrap();
+        // Methods to test:
+        // - define_structs
+        // - define_enum_from_keys
+        // - define_structs_from_values
+        // - define_enum_from_filenames
+        // - define_structs_from_file_contents
 
-    edres::create_struct(
-        "config.toml",
-        "src/config/toml.rs",
-        &StructOptions {
-            struct_name: "TomlConfig".to_owned(),
-            ..StructOptions::serde_default()
-        },
-    )
-    .unwrap();
+        // define_structs
+        {
+            let path = format!("data/{}/struct.{}", dir, dir);
+            let value = match parsing::parse_source_file(path.as_ref(), &options)? {
+                Value::Struct(s) => s,
+                _ => panic!("Not a struct!"),
+            };
 
-    edres::create_struct(
-        "config.yaml",
-        "src/config/yaml.rs",
-        &StructOptions {
-            struct_name: "YamlConfig".to_owned(),
-            const_name: Some("YAML_CONFIG".to_owned()),
-            ..StructOptions::serde_default()
-        },
-    )
-    .unwrap();
+            let source = gen::define_structs(&value, "Struct", Some(path.as_ref()), &options)?;
+            writeln!(&mut buffer, "{}", source.to_string())?;
+        }
 
-    edres::create_struct(
-        "tests/temp/example_config.json",
-        "tests/config/dynamic.rs",
-        &StructOptions {
-            struct_name: "DynamicConfig".to_owned(),
-            const_name: Some("DYNAMIC_CONFIG".to_owned()),
-            dynamic_loading: DynamicLoading::Always,
-            ..StructOptions::serde_default()
-        },
-    )
-    .unwrap();
+        // define_enum_from_keys
+        {
+            let path = format!("data/{}/map.{}", dir, dir);
+            let value = match parsing::parse_source_file(path.as_ref(), &options)? {
+                Value::Struct(s) => s,
+                _ => panic!("Not a struct!"),
+            };
 
-    edres::create_struct(
-        "tests/temp/example_config.json",
-        "tests/config/dependent.rs",
-        &StructOptions {
-            struct_name: "DependentConfig".to_owned(),
-            const_name: Some("DEPENDENT_CONFIG".to_owned()),
-            dynamic_loading: DynamicLoading::DebugOnly,
-            ..StructOptions::serde_default()
-        },
-    )
-    .unwrap();
+            let source = gen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options)?;
+            writeln!(&mut buffer, "{}", source.to_string())?;
+        }
 
-    edres::create_struct(
-        "tests/temp/example_config.json",
-        "tests/config/static_config.rs",
-        &StructOptions {
-            struct_name: "StaticConfig".to_owned(),
-            const_name: Some("STATIC_CONFIG".to_owned()),
-            dynamic_loading: DynamicLoading::Never,
-            ..StructOptions::serde_default()
-        },
-    )
-    .unwrap();
+        // define_structs_from_values
+        {
+            let path = format!("data/{}/map.{}", dir, dir);
+            let value = match parsing::parse_source_file(path.as_ref(), &options)? {
+                Value::Struct(s) => s,
+                _ => panic!("Not a struct!"),
+            };
 
-    edres::create_enum(
-        "enum.json",
-        "src/config/json_enum.rs",
-        &EnumOptions::serde_default(),
-    )
-    .unwrap();
+            let source = gen::define_structs_from_values(&value, "VStruct", &options)?;
+            writeln!(&mut buffer, "{}", source.to_string())?;
+        }
 
-    edres::create_enum(
-        "enum.ron",
-        "src/config/ron_enum.rs",
-        &EnumOptions {
-            enum_name: "RonEnum".to_owned(),
-            ..EnumOptions::serde_default()
-        },
-    )
-    .unwrap();
+        // define_enum_from_filenames
+        {
+            let path = format!("data/{}/files", dir);
+            let source = gen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options)?;
+            writeln!(&mut buffer, "{}", source.to_string())?;
+        }
 
-    edres::create_enum(
-        "enum.toml",
-        "src/config/toml_enum.rs",
-        &EnumOptions {
-            enum_name: "TomlEnum".to_owned(),
-            ..EnumOptions::serde_default()
-        },
-    )
-    .unwrap();
+        // define_structs_from_file_contents
+        {
+            let path = format!("data/{}/files", dir);
+            let source = gen::define_structs_from_file_contents(
+                path.as_ref(),
+                "FileStruct",
+                None,
+                &WipOptions {
+                    all_values_const_name: Some("FILE_VALUES".into()),
+                    ..options.clone()
+                },
+            )?;
+            writeln!(&mut buffer, "{}", source.to_string())?;
+        }
 
-    edres::create_enum(
-        "enum.yaml",
-        "src/config/yaml_enum.rs",
-        &EnumOptions {
-            enum_name: "YamlEnum".to_owned(),
-            all_variants_const: Some("VALUES".to_owned()),
-            ..EnumOptions::serde_default()
-        },
-    )
-    .unwrap();
+        std::fs::write(format!("src/gen/{}.rs", dir), buffer)?;
+    }
 
-    edres::files_enum::create_files_enum(
-        "files_enum_files",
-        "src/config/files_enum.rs",
-        &EnumOptions {
-            enum_name: "FileKey".to_owned(),
-            ..EnumOptions::serde_default()
-        },
-    )
-    .unwrap();
+    Ok(())
 }

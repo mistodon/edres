@@ -17,11 +17,14 @@ ex edres_macros cargo check --features toml-parsing
 ex . cargo test --all-features
 ex edres_core cargo test --all-features
 ex edres_macros cargo test --all-features
+ex test_edres cargo test
 
 ex . cargo fmt -- --check
 ex edres_core cargo fmt -- --check
 ex edres_macros cargo fmt -- --check
+ex test_edres cargo fmt -- --check
 
 ex . cargo clippy --all-features -- -D clippy::all
 ex edres_core cargo clippy --all-features -- -D clippy::all
 ex edres_macros cargo clippy --all-features -- -D clippy::all
+ex test_edres cargo clippy --all-features -- -D clippy::all

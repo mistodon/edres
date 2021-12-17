@@ -1,275 +1,106 @@
-#![cfg(test)]
+pub mod gen;
 
-mod config;
-
-mod json_tests {
-    use crate::config::{
-        json::{Config, CONFIG},
-        json_enum::Key,
-    };
-
-    #[test]
-    fn test_declarations() {
-        let _conf: &Config = &CONFIG;
+#[cfg(test)]
+mod de {
+    pub fn json<'a, T: serde::Deserialize<'a>>(source: &'a str) -> T {
+        serde_json::from_str(source).unwrap()
     }
 
-    #[test]
-    fn test_deserialization() {
-        let json_source = include_str!("../config.json");
-        let conf: Config = serde_json::from_str(json_source).unwrap();
-        assert_eq!(conf.name, "Config name");
+    pub fn toml<'a, T: serde::Deserialize<'a>>(source: &'a str) -> T {
+        toml::de::from_str(source).unwrap()
     }
 
-    #[test]
-    fn test_load_function() {
-        let config = Config::load();
-        assert_eq!(config.name, CONFIG.name);
-    }
-
-    #[test]
-    fn test_simple_values() {
-        assert_eq!(CONFIG.name, "Config name");
-        assert_eq!(CONFIG.nothing, None);
-        assert_eq!(CONFIG.number, 100);
-        assert_eq!(CONFIG.is_config, true);
-        assert_eq!(CONFIG.is_not_config, false);
-        assert_eq!(CONFIG.i64_max, std::i64::MAX);
-        assert_eq!(CONFIG.u64_max, std::u64::MAX);
-        assert_eq!(CONFIG.floaty, 123.456789);
-    }
-
-    #[test]
-    fn test_composite_values() {
-        assert_eq!(CONFIG.coord, [-5.0, 5.0].as_ref());
-        assert_eq!(CONFIG.nested.name, "nested2");
-        assert_eq!(CONFIG.nested.values.x, 0);
-        assert_eq!(CONFIG.nested.values.y, 1);
-        assert_eq!(CONFIG.nested.values.z, 2);
-        assert_eq!(CONFIG.array_of_structs[0].name, "first");
-        assert_eq!(CONFIG.array_of_structs[1].name, "second");
-        assert_eq!(CONFIG.array_of_structs[0].n, 0);
-        assert_eq!(CONFIG.array_of_structs[1].n, 1);
-    }
-
-    #[test]
-    fn test_empty_array_is_array_of_unit() {
-        let empty: &[()] = &[];
-        assert_eq!(CONFIG.empty, empty);
-    }
-
-    #[test]
-    fn test_enum() {
-        assert_eq!(Key::ALL, &[Key::A, Key::B, Key::C]);
+    pub fn yaml<'a, T: for<'de> serde::Deserialize<'de>>(source: &'a str) -> T {
+        serde_yaml::from_str(source).unwrap()
     }
 }
 
-mod ron_tests {
-    use ron;
+macro_rules! gen_tests {
+    ($modname:ident, $ext:literal) => {
+        #[cfg(test)]
+        mod $modname {
+            use super::de;
 
-    use crate::config::{
-        ron::{RonConfig, RONCONFIG},
-        ron_enum::RonEnum,
+            #[test]
+            fn deserialize_struct() {
+                use crate::gen::$modname::Struct;
+
+                let src =
+                    std::fs::read_to_string(format!("data/{}/struct.{}", $ext, $ext)).unwrap();
+                let data: Struct = de::$modname(&src);
+                assert_eq!(data.number, 100_i64);
+                assert_eq!(data.text, $ext);
+                assert_eq!(data.nested.array.as_ref(), [1, 2, 3_i64]);
+            }
+
+            #[test]
+            fn enum_keys() {
+                use crate::gen::$modname::Enum;
+
+                assert_eq!(Enum::ALL, &[Enum::Variant1, Enum::Variant2]);
+                assert_eq!(Enum::Variant1.get().value, 1);
+                assert_eq!(Enum::Variant2.get().value, 2);
+            }
+
+            #[test]
+            fn deserialize_value_structs() {
+                use crate::gen::$modname::{Enum, VStruct, VALUES};
+                use std::collections::HashMap;
+
+                let src = std::fs::read_to_string(format!("data/{}/map.{}", $ext, $ext)).unwrap();
+
+                if $ext == "toml" {
+                    // NOTE: toml can't deserialize using an enum as
+                    // a key, they're always treated as strings :(
+                } else {
+                    let map: HashMap<Enum, VStruct> = de::$modname(&src);
+                    assert_eq!(map[&Enum::Variant1].value, 1);
+                    assert_eq!(map[&Enum::Variant2].value, 2);
+                }
+
+                assert_eq!(VALUES[0].value, 1);
+                assert_eq!(VALUES[1].value, 2);
+            }
+
+            #[test]
+            fn file_enum() {
+                use crate::gen::$modname::FileEnum;
+
+                assert_eq!(FileEnum::ALL, &[FileEnum::FileA, FileEnum::FileB]);
+                let path_a = format!("data/{}/files/file_a.{}", $ext, $ext);
+                let path_b = format!("data/{}/files/file_b.{}", $ext, $ext);
+                assert_eq!(FileEnum::FILE_PATHS, &[&path_a, &path_b]);
+                assert_eq!(FileEnum::FileA.get().name, "file_a");
+                assert_eq!(FileEnum::FileB.get().name, "file_b");
+            }
+
+            #[test]
+            fn deserialize_file_structs() {
+                use crate::gen::$modname::{FileEnum, FileStruct, FILE_VALUES};
+                use std::collections::HashMap;
+
+                // NOTE: We're cloning keys here because they would usually
+                // be Copy, but can't be because I (lazily) wanted to
+                // re-use the Options in build.rs for structs and enums.
+                let map = FileEnum::ALL
+                    .iter()
+                    .map(|key| {
+                        let path = key.clone().path();
+                        let src = std::fs::read_to_string(&path).unwrap();
+                        let value: FileStruct = de::$modname(&src);
+                        (key.clone(), value)
+                    })
+                    .collect::<HashMap<_, _>>();
+
+                assert_eq!(map[&FileEnum::FileA].name, "file_a");
+                assert_eq!(map[&FileEnum::FileB].name, "file_b");
+                assert_eq!(FILE_VALUES[0].name, "file_a");
+                assert_eq!(FILE_VALUES[1].name, "file_b");
+            }
+        }
     };
-
-    #[test]
-    fn test_declarations() {
-        let _conf: &RonConfig = &RONCONFIG;
-    }
-
-    #[test]
-    fn test_deserialization() {
-        let ron_source = include_str!("../config.ron");
-        let conf: RonConfig = ron::de::from_str(ron_source).unwrap();
-        assert_eq!(conf.name, "Config name");
-    }
-
-    #[test]
-    fn test_load_function() {
-        let config = RonConfig::load();
-        assert_eq!(config.name, RONCONFIG.name);
-    }
-
-    #[test]
-    fn test_simple_values() {
-        assert_eq!(RONCONFIG.name, "Config name");
-        assert_eq!(RONCONFIG.unit, ());
-        assert_eq!(RONCONFIG.angelface, 'A');
-        assert_eq!(RONCONFIG.integer, 100);
-        assert_eq!(RONCONFIG.float, 100.1);
-        assert_eq!(RONCONFIG.is_true, true);
-        assert_eq!(RONCONFIG.nothing, None);
-        assert_eq!(RONCONFIG.something, Some(10));
-    }
-
-    #[test]
-    fn test_empty_array() {
-        let empty: &[()] = &[];
-        assert_eq!(RONCONFIG.empty, empty);
-    }
-
-    #[test]
-    fn test_compound_values() {
-        assert_eq!(RONCONFIG.countdown[0], 3);
-        assert_eq!(RONCONFIG.countdown[1], 2);
-        assert_eq!(RONCONFIG.countdown[2], 1);
-        assert_eq!(RONCONFIG.structure.name, "Doesn't have one, sadly.");
-        assert_eq!(RONCONFIG.structure.status, "Naw too bad.");
-        assert_eq!(RONCONFIG.objects[0].name, "Thing 1");
-        assert_eq!(RONCONFIG.objects[0].index, 0);
-        assert_eq!(RONCONFIG.objects[1].name, "Thing 2");
-        assert_eq!(RONCONFIG.objects[1].index, 1);
-    }
-
-    #[test]
-    fn test_enum() {
-        assert_eq!(RonEnum::ALL, &[RonEnum::A, RonEnum::B, RonEnum::C]);
-    }
 }
 
-mod toml_tests {
-    use toml;
-
-    use crate::config::{
-        toml::{TomlConfig, TOMLCONFIG},
-        toml_enum::TomlEnum,
-    };
-
-    #[test]
-    fn test_declarations() {
-        let _conf: &TomlConfig = &TOMLCONFIG;
-    }
-
-    #[test]
-    fn test_deserialization() {
-        let toml_source = include_str!("../config.toml");
-        let conf: TomlConfig = toml::from_str(toml_source).unwrap();
-        assert_eq!(conf.name, "Config name");
-    }
-
-    #[test]
-    fn test_load_function() {
-        let config = TomlConfig::load();
-        assert_eq!(config.name, TOMLCONFIG.name);
-    }
-
-    #[test]
-    fn test_simple_values() {
-        assert_eq!(TOMLCONFIG.name, "Config name");
-        assert_eq!(TOMLCONFIG.number, 100);
-        assert_eq!(TOMLCONFIG.is_config, true);
-        assert_eq!(TOMLCONFIG.is_not_config, false);
-        assert_eq!(TOMLCONFIG.one_point_zero, 1.0);
-        assert_eq!(TOMLCONFIG.one_point_five, 1.5);
-        assert_eq!(TOMLCONFIG.floaty, 123.456789);
-    }
-
-    #[test]
-    fn test_simple_array_values() {
-        assert_eq!(TOMLCONFIG.coord, [-5.0, 5.0].as_ref());
-        assert_eq!(TOMLCONFIG.color, [0, 64, 128, 255].as_ref());
-        assert_eq!(TOMLCONFIG.words, ["one", "two", "three"].as_ref());
-        assert_eq!(
-            TOMLCONFIG.points,
-            [[1, 2].as_ref(), [3, 4].as_ref(), [5, 6].as_ref()].as_ref()
-        );
-    }
-
-    #[test]
-    fn test_table_values() {
-        assert_eq!(TOMLCONFIG.table.name, "A table");
-        assert_eq!(TOMLCONFIG.table.magnitude, 1000000000);
-    }
-
-    #[test]
-    fn test_nested_tables() {
-        assert_eq!(
-            TOMLCONFIG.table.table_again.name,
-            "OK this is just getting ridiculous"
-        );
-        assert_eq!(
-            TOMLCONFIG.table.table_again.description,
-            "getting ridiculous"
-        );
-    }
-
-    #[test]
-    fn test_array_of_tables() {
-        assert_eq!(TOMLCONFIG.arrayble[0].description, "just unbelievable");
-        assert_eq!(TOMLCONFIG.arrayble[1].description, "what is this syntax");
-    }
-
-    #[test]
-    fn test_empty_array_is_array_of_unit() {
-        let empty: &[()] = &[];
-        assert_eq!(TOMLCONFIG.empty, empty);
-    }
-
-    #[test]
-    fn test_enum() {
-        assert_eq!(TomlEnum::ALL, &[TomlEnum::A, TomlEnum::B, TomlEnum::C]);
-    }
-}
-
-mod yaml_tests {
-    use serde_yaml;
-    use std;
-
-    use crate::config::{
-        yaml::{YamlConfig, YAML_CONFIG},
-        yaml_enum::YamlEnum,
-    };
-
-    #[test]
-    fn test_declarations() {
-        let _conf: &YamlConfig = &YAML_CONFIG;
-    }
-
-    #[test]
-    fn test_deserialization() {
-        let yaml_source = include_str!("../config.yaml");
-        let conf: YamlConfig = serde_yaml::from_str(yaml_source).unwrap();
-        assert_eq!(conf.name, "Config name");
-    }
-
-    #[test]
-    fn test_load_function() {
-        let config = YamlConfig::load();
-        assert_eq!(config.name, YAML_CONFIG.name);
-    }
-
-    #[test]
-    fn test_simple_values() {
-        assert_eq!(YAML_CONFIG.name, "Config name");
-        assert_eq!(YAML_CONFIG.nothing, None);
-        assert_eq!(YAML_CONFIG.number, 100);
-        assert_eq!(YAML_CONFIG.is_config, true);
-        assert_eq!(YAML_CONFIG.is_not_config, false);
-        assert_eq!(YAML_CONFIG.i64_max, std::i64::MAX);
-        assert_eq!(YAML_CONFIG.u64_max, std::u64::MAX);
-        assert_eq!(YAML_CONFIG.floaty, 123.456789);
-    }
-
-    #[test]
-    fn test_composite_values() {
-        assert_eq!(YAML_CONFIG.coord, [-5.0, 5.0].as_ref());
-        assert_eq!(YAML_CONFIG.nested.name, "nested2");
-        assert_eq!(YAML_CONFIG.nested.values.x, 0);
-        assert_eq!(YAML_CONFIG.nested.values.y, 1);
-        assert_eq!(YAML_CONFIG.nested.values.z, 2);
-        assert_eq!(YAML_CONFIG.array_of_structs[0].name, "first");
-        assert_eq!(YAML_CONFIG.array_of_structs[1].name, "second");
-        assert_eq!(YAML_CONFIG.array_of_structs[0].n, 0);
-        assert_eq!(YAML_CONFIG.array_of_structs[1].n, 1);
-    }
-
-    #[test]
-    fn test_empty_array_is_array_of_unit() {
-        let empty: &[()] = &[];
-        assert_eq!(YAML_CONFIG.empty, empty);
-    }
-
-    #[test]
-    fn test_enum() {
-        assert_eq!(YamlEnum::VALUES, &[YamlEnum::A, YamlEnum::B, YamlEnum::C]);
-    }
-}
+gen_tests!(json, "json");
+gen_tests!(toml, "toml");
+gen_tests!(yaml, "yaml");

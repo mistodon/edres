@@ -1,0 +1,5 @@
+number = 100
+text = "toml"
+
+[nested]
+array = [1, 2, 3]

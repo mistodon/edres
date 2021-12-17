@@ -18,7 +18,7 @@ pub struct WipOptions {
     pub all_values_const_name: Option<Cow<'static, str>>,
     pub values_struct_name: Option<Cow<'static, str>>,
     pub get_value_fn_name: Option<Cow<'static, str>>,
-    pub values_struct_options: Option<Box<WipOptions>>,
+    pub values_struct_options: Option<Box<WipOptions>>, // TODO: No boxes, better defaults!
     pub file_paths_const_name: Option<Cow<'static, str>>,
     pub get_path_fn_name: Option<Cow<'static, str>>,
     pub file_strings_const_name: Option<Cow<'static, str>>,

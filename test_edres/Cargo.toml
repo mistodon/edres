@@ -1,25 +1,15 @@
 [package]
 name = "test_edres"
 version = "0.1.0"
-authors = ["Vi <violet@hey.com>"]
-edition = "2018"
+edition = "2021"
 
-[build-dependencies.edres]
-path = ".."
-features = [
-    "json-parsing",
-    "ron-parsing",
-    "toml-parsing",
-    "yaml-parsing",
-    "experimental-files-enum",
-]
+[dependencies]
+edres = { path = "..", features = ["json-parsing", "ron-parsing", "toml-parsing", "yaml-parsing", "proc-macros"] }
+ron = "*"
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+serde_yaml = "*"
+toml = "*"
 
-[dev-dependencies]
-ron = "~0.3.0"
-serde_json = "~1.0.24"
-serde_yaml = "~0.7.5"
-toml = "~0.4.6"
-
-[dev-dependencies.serde]
-version = "~1.0.70"
-features = ["derive"]
+[build-dependencies]
+edres = { path = "..", features = ["json-parsing", "ron-parsing", "toml-parsing", "yaml-parsing"] }

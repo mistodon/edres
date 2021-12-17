@@ -205,7 +205,7 @@ where
                 .values_struct_options
                 .as_ref()
                 .cloned()
-                .unwrap_or_default();
+                .unwrap_or_else(|| Box::new(WipOptions::minimal()));
             let (value_type, values, new_struct_tokens) =
                 establish_types_for_values(values.into_iter(), &struct_name, &value_options)?;
             let values = values
@@ -222,8 +222,8 @@ where
             if let Some(get_value_fn_name) = &options.get_value_fn_name {
                 let get_value_fn_name = format_ident!("{}", get_value_fn_name);
                 inherents.push(quote! {
-                    pub const fn #get_value_fn_name(&self) -> &'static #value_type {
-                        &Self::#const_name[*self as usize]
+                    pub const fn #get_value_fn_name(self) -> &'static #value_type {
+                        &Self::#const_name[self as usize]
                     }
                 });
             }
@@ -341,7 +341,7 @@ pub fn define_structs_from_values(
             .collect::<Result<Vec<_>, _>>()?;
 
         const_tokens = Some(quote! {
-            pub const #const_name: &'static [#value_type] = &[
+            pub const #const_name: &[#value_type] = &[
                 #(#values,)*
             ];
         });
@@ -380,6 +380,8 @@ fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
     Ok((value_type, values, new_structs))
 }
 
+// TODO: Doesn't fail if dir doesn't exist :/
+// TODO: Should be from manifest root
 pub fn define_enum_from_filenames(
     root: &Path,
     enum_name: &str,
@@ -420,12 +422,16 @@ pub fn define_enum_from_filenames(
 
     if let Some(const_name) = &options.file_paths_const_name {
         let const_name = format_ident!("{}", const_name);
-        let get_fn = options.get_path_fn_name.as_ref().map(|fn_name| {
-            let fn_name = format_ident!("{}", fn_name);
-            quote! {
-                pub const fn #fn_name(&self) -> &'static str { Self::#const_name[*self as usize] }
-            }
-        }).into_iter();
+        let get_fn = options
+            .get_path_fn_name
+            .as_ref()
+            .map(|fn_name| {
+                let fn_name = format_ident!("{}", fn_name);
+                quote! {
+                    pub const fn #fn_name(self) -> &'static str { Self::#const_name[self as usize] }
+                }
+            })
+            .into_iter();
 
         let filepaths = filepaths.iter();
         extra_inherents.push(quote! {
@@ -440,7 +446,7 @@ pub fn define_enum_from_filenames(
         let get_fn = options.get_bytes_fn_name.as_ref().map(|fn_name| {
             let fn_name = format_ident!("{}", fn_name);
             quote! {
-                pub const fn #fn_name(&self) -> &'static [u8] { Self::#const_name[*self as usize] }
+                pub const fn #fn_name(self) -> &'static [u8] { Self::#const_name[self as usize] }
             }
         }).into_iter();
 
@@ -454,12 +460,16 @@ pub fn define_enum_from_filenames(
     }
     if let Some(const_name) = &options.file_strings_const_name {
         let const_name = format_ident!("{}", const_name);
-        let get_fn = options.get_string_fn_name.as_ref().map(|fn_name| {
-            let fn_name = format_ident!("{}", fn_name);
-            quote! {
-                pub const fn #fn_name(&self) -> &'static str { Self::#const_name[*self as usize] }
-            }
-        }).into_iter();
+        let get_fn = options
+            .get_string_fn_name
+            .as_ref()
+            .map(|fn_name| {
+                let fn_name = format_ident!("{}", fn_name);
+                quote! {
+                    pub const fn #fn_name(self) -> &'static str { Self::#const_name[self as usize] }
+                }
+            })
+            .into_iter();
 
         let filepaths = filepaths.iter();
         extra_inherents.push(quote! {
@@ -528,11 +538,11 @@ pub fn define_structs_from_file_contents(
         let const_name = format_ident!("{}", const_name);
         let values = values
             .iter()
-            .map(|value| define_value(value, &options, &struct_name, None, None))
+            .map(|value| define_value(value, options, struct_name, None, None))
             .collect::<Result<Vec<_>, _>>()?;
 
         const_tokens = Some(quote! {
-            pub const #const_name: &'static [#value_type] = &[
+            pub const #const_name: &[#value_type] = &[
                 #(#values,)*
             ];
         });
@@ -1360,7 +1370,7 @@ mod tests {
                 impl Enum {
                     pub const VARIANTS: &'static [Self] = &[Self::First, ];
                     pub const VALUES: &'static [Enum__Value] = &[Enum__Value { key: (), }, ];
-                    pub const fn get(&self) -> &'static Enum__Value { &Self::VALUES[*self as usize] }
+                    pub const fn get(self) -> &'static Enum__Value { &Self::VALUES[self as usize] }
                 }
 
                 impl Default for Enum {
@@ -1387,7 +1397,6 @@ mod tests {
                 }
 
                 #[allow(non_camel_case_types)]
-                #[derive(Debug)]
                 pub struct Enum__Value {
                     pub key: (),
                 }
@@ -1407,7 +1416,7 @@ mod tests {
         assert_tokens(
             result,
             quote! {
-                pub const VALUES: &'static [()] = &[(), (),];
+                pub const VALUES: &[()] = &[(), (),];
             },
         );
     }
@@ -1455,147 +1464,10 @@ mod tests {
                     pub key: bool,
                 }
 
-                pub const VALUES: &'static [Struct] = &[
+                pub const VALUES: &[Struct] = &[
                     Struct { key: true, },
                     Struct { key: false, },
                 ];
-            },
-        );
-    }
-
-    #[test]
-    fn enum_from_filenames() {
-        let result =
-            define_enum_from_filenames("src".as_ref(), "FileName", &WipOptions::minimal()).unwrap();
-        assert_tokens(
-            result,
-            quote! {
-                pub enum FileName {
-                    Enums,
-                    Error,
-                    Files,
-                    FilesEnum,
-                    Format,
-                    Gen,
-                    Generation,
-                    Lib,
-                    LoadFns,
-                    Options,
-                    Structs,
-                    Validation,
-                    Value,
-                }
-            },
-        );
-    }
-
-    #[test]
-    fn enum_from_filenames_with_consts() {
-        let result = define_enum_from_filenames(
-            "src".as_ref(),
-            "FileName",
-            &WipOptions {
-                file_strings_const_name: Some("STRINGS".into()),
-                get_string_fn_name: Some("string".into()),
-                file_bytes_const_name: Some("BYTES".into()),
-                get_bytes_fn_name: Some("bytes".into()),
-                all_values_const_name: None,
-                ..WipOptions::new()
-            },
-        )
-        .unwrap();
-        assert_tokens(
-            result,
-            quote! {
-                #[derive(Debug)]
-                pub enum FileName {
-                    Enums,
-                    Error,
-                    Files,
-                    FilesEnum,
-                    Format,
-                    Gen,
-                    Generation,
-                    Lib,
-                    LoadFns,
-                    Options,
-                    Structs,
-                    Validation,
-                    Value,
-                }
-
-                impl FileName {
-                    pub const FILE_PATHS: &'static [&'static str] = &[
-                        "src/enums.rs",
-                        "src/error.rs",
-                        "src/files.rs",
-                        "src/files_enum.rs",
-                        "src/format.rs",
-                        "src/gen.rs",
-                        "src/generation.rs",
-                        "src/lib.rs",
-                        "src/load_fns.rs",
-                        "src/options.rs",
-                        "src/structs.rs",
-                        "src/validation.rs",
-                        "src/value.rs",
-                    ];
-                    pub const fn path(&self) -> &'static str {
-                        Self::FILE_PATHS[*self as usize]
-                    }
-                    pub const BYTES: &'static [&'static [u8]] = &[
-                        include_bytes!("src/enums.rs"),
-                        include_bytes!("src/error.rs"),
-                        include_bytes!("src/files.rs"),
-                        include_bytes!("src/files_enum.rs"),
-                        include_bytes!("src/format.rs"),
-                        include_bytes!("src/gen.rs"),
-                        include_bytes!("src/generation.rs"),
-                        include_bytes!("src/lib.rs"),
-                        include_bytes!("src/load_fns.rs"),
-                        include_bytes!("src/options.rs"),
-                        include_bytes!("src/structs.rs"),
-                        include_bytes!("src/validation.rs"),
-                        include_bytes!("src/value.rs"),
-                    ];
-                    pub const fn bytes(&self) -> &'static [u8] {
-                        Self::BYTES[*self as usize]
-                    }
-                    pub const STRINGS: &'static [&'static str] = &[
-                        include_str!("src/enums.rs"),
-                        include_str!("src/error.rs"),
-                        include_str!("src/files.rs"),
-                        include_str!("src/files_enum.rs"),
-                        include_str!("src/format.rs"),
-                        include_str!("src/gen.rs"),
-                        include_str!("src/generation.rs"),
-                        include_str!("src/lib.rs"),
-                        include_str!("src/load_fns.rs"),
-                        include_str!("src/options.rs"),
-                        include_str!("src/structs.rs"),
-                        include_str!("src/validation.rs"),
-                        include_str!("src/value.rs"),
-                    ];
-                    pub const fn string(&self) -> &'static str {
-                        Self::STRINGS[*self as usize]
-                    }
-                    pub const SOURCE_PATH: &'static str = "src";
-                    pub const ALL: &'static [Self] = &[
-                        Self::Enums,
-                        Self::Error,
-                        Self::Files,
-                        Self::FilesEnum,
-                        Self::Format,
-                        Self::Gen,
-                        Self::Generation,
-                        Self::Lib,
-                        Self::LoadFns,
-                        Self::Options,
-                        Self::Structs,
-                        Self::Validation,
-                        Self::Value,
-                    ];
-                }
             },
         );
     }

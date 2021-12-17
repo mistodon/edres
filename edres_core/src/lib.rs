@@ -25,6 +25,8 @@ pub use crate::{
     enums::*, // TODO: not this
     error::{Error, GenerationError, OptionsError},
     format::Format,
-    options::{DynamicLoading, EnumOptions, FloatSize, IntSize, SerdeSupport, StructOptions},
+    options::{
+        DynamicLoading, EnumOptions, FloatSize, IntSize, SerdeSupport, StructOptions, WipOptions,
+    },
     structs::*, // TODO: not this
 };

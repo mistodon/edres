@@ -2,7 +2,4 @@ target/
 **/*.rs.bk
 Cargo.lock
 *.swp
-test_edres/src/config/*.rs
-!test_edres/src/config/mod.rs
-test_edres/tests/config/*.rs
-test_edres/tests/temp/*
+test_edres/src/gen/*.rs
