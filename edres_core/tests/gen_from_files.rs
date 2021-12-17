@@ -2,7 +2,7 @@ use pretty_assertions::assert_eq;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use edres_core::{gen, WipOptions};
+use edres_core::{codegen, WipOptions};
 
 fn assert_tokens(a: TokenStream, b: TokenStream) {
     assert_eq!(a.to_string(), b.to_string())
@@ -10,9 +10,12 @@ fn assert_tokens(a: TokenStream, b: TokenStream) {
 
 #[test]
 fn enum_from_filenames() {
-    let result =
-        gen::define_enum_from_filenames("tests/yamls".as_ref(), "FileName", &WipOptions::minimal())
-            .unwrap();
+    let result = codegen::define_enum_from_filenames(
+        "tests/yamls".as_ref(),
+        "FileName",
+        &WipOptions::minimal(),
+    )
+    .unwrap();
     assert_tokens(
         result,
         quote! {
@@ -26,7 +29,7 @@ fn enum_from_filenames() {
 
 #[test]
 fn enum_from_filenames_with_values() {
-    let result = gen::define_enum_from_filenames(
+    let result = codegen::define_enum_from_filenames(
         "tests/yamls".as_ref(),
         "FileName",
         &WipOptions {
@@ -79,7 +82,7 @@ fn enum_from_filenames_with_values() {
 
 #[test]
 fn structs_from_file_contents() {
-    let result = gen::define_structs_from_file_contents(
+    let result = codegen::define_structs_from_file_contents(
         "tests/yamls".as_ref(),
         "FileContent",
         None,
@@ -126,7 +129,7 @@ fn structs_from_file_contents() {
 
 #[test]
 fn enum_from_filenames_with_consts() {
-    let result = gen::define_enum_from_filenames(
+    let result = codegen::define_enum_from_filenames(
         "tests/yamls".as_ref(),
         "FileName",
         &WipOptions {

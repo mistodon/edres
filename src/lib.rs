@@ -1,144 +1,4 @@
-//! This crate is a library for generating structs and enums based on a config
-//! file at build time. It is intended for use in a `build.rs` file
-//! so should be included in your `[build-dependencies]`.
-//!
-//! ```toml
-//! [build-dependencies.edres]
-//! version = "~0.4.0"
-//! features = ["toml-parsing"]
-//! ```
-//!
-//! By default, `edres` is markup-language-agnostic, so
-//! include the relevant feature for whatever language your config
-//! file is written in. Choices are:
-//!
-//! 1.  `json-parsing`
-//! 2.  `ron-parsing`
-//! 3.  `toml-parsing`
-//! 4.  `yaml-parsing`
-//!
-//! Only `toml-parsing` is included by default, so be sure to specify
-//! the features you need in your `Cargo.toml` file.
-//!
-//! # Examples
-//!
-//! ## Structs
-//!
-//! ```rust,no_run
-//! // build.rs
-//! use edres::{Error, StructOptions};
-//!
-//! fn main() -> Result<(), Error> {
-//!     edres::create_struct(
-//!         "config.toml",
-//!         "src/config.rs",
-//!         &StructOptions::default())
-//! }
-//! ```
-//!
-//! The above build script will take the following `config.toml` file and generate
-//! a `config.rs` like the following:
-//!
-//! ```toml
-//! # config.toml
-//! name = "Application"
-//! version = 5
-//! features = [
-//!     "one",
-//!     "two",
-//!     "three"
-//! ]
-//! ```
-//!
-//! ```rust,no_run
-//! // config.rs
-//! // ...
-//! use std::borrow::Cow;
-//!
-//! #[derive(Debug, Clone)]
-//! #[allow(non_camel_case_types)]
-//! pub struct Config {
-//!     pub features: Cow<'static, [Cow<'static, str>]>,
-//!     pub name: Cow<'static, str>,
-//!     pub version: i64,
-//! }
-//!
-//! pub const CONFIG: Config = Config {
-//!     features: Cow::Borrowed(&[Cow::Borrowed("one"), Cow::Borrowed("two"), Cow::Borrowed("three")]),
-//!     name: Cow::Borrowed("Application"),
-//!     version: 5,
-//! };
-//! ```
-//!
-//! Strings and arrays are represented by `Cow` types, which allows
-//! the entire Config struct to be either heap allocated at runtime,
-//! or a compile time constant, as shown above.
-//!
-//! ## Enums
-//!
-//! ```rust,no_run
-//! // build.rs
-//! use edres::{Error, EnumOptions};
-//!
-//! fn main() -> Result<(), Error> {
-//!     edres::create_enum(
-//!         "items.yaml",
-//!         "src/items.rs",
-//!         &EnumOptions::default())
-//! }
-//! ```
-//!
-//! The above build script will take the following `items.yaml` file and generate
-//! a (not-formatted) `items.rs` like the following:
-//!
-//! ```yaml
-//! # items.yaml
-//! ItemOne:
-//!     - data
-//! ItemTwo:
-//!     - more
-//!     - data
-//! ```
-//!
-//! ```rust,no_run
-//! // items.rs
-//! // ...
-//! #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-//! pub enum Key {
-//!     ItemOne,
-//!     ItemTwo,
-//! }
-//! impl Key {
-//!     pub const ALL: &'static [Key] = &[Key::ItemOne, Key::ItemTwo];
-//! }
-//! impl Default for Key {
-//!     fn default() -> Self {
-//!         Self::ItemOne
-//!     }
-//! }
-//! impl std::fmt::Display for Key {
-//!     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-//!         write!(f, "{:?}", self)
-//!     }
-//! }
-//! impl std::str::FromStr for Key {
-//!     type Err = ();
-//!     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//!         const STRINGS: &'static [&'static str] = &["ItemOne", "ItemTwo"];
-//!         for (index, &key) in STRINGS.iter().enumerate() {
-//!             if key == s {
-//!                 return Ok(Key::ALL[index]);
-//!             }
-//!         }
-//!         Err(())
-//!     }
-//! }
-//! ```
-//!
-//! As you can see, this provides more functionality out-of-the-box - most of
-//! which could be disabled in the `EnumOptions`. The intended purpose of
-//! this is to have a small efficient type to use as a key into the data stored
-//! in the initial config file.
+mod files;
 
 #[cfg(not(any(
     feature = "json-parsing",
@@ -148,9 +8,159 @@
 )))]
 compile_error!("The edres crate requires at least one parsing feature to be enabled:\n {json-parsing, ron-parsing, toml-parsing, yaml-parsing}");
 
+use std::path::Path;
+
 #[cfg(feature = "proc-macros")]
 pub use edres_macros::{
-    define_enum_from_dir, define_enums, define_structs, define_structs_from_dir,
+    define_enums, define_enums_from_dirs, define_structs, define_structs_from_dirs,
 };
 
 pub use edres_core::*;
+
+pub fn generate_structs<SrcPath: AsRef<Path>, Name: AsRef<str>>(
+    src_path: SrcPath,
+    struct_name: Name,
+    options: &WipOptions,
+) -> Result<String, WipError> {
+    let path = src_path.as_ref();
+    let value = parsing::parse_source_file(path, options)?.assume_struct()?;
+    let tokens = codegen::define_structs(&value, struct_name.as_ref(), Some(path), options)?;
+    Ok(tokens.to_string())
+}
+
+pub fn generate_structs_from_source<Source: AsRef<str>, Name: AsRef<str>>(
+    source: Source,
+    struct_name: Name,
+    format: Format,
+    options: &WipOptions,
+) -> Result<String, WipError> {
+    let value = parsing::parse_source(source.as_ref(), format, options)?.assume_struct()?;
+    let tokens = codegen::define_structs(&value, struct_name.as_ref(), None, options)?;
+    Ok(tokens.to_string())
+}
+
+pub fn generate_structs_from_files<DirPath: AsRef<Path>, Name: AsRef<str>>(
+    dir_path: DirPath,
+    struct_name: Name,
+    options: &WipOptions,
+) -> Result<String, WipError> {
+    let tokens = codegen::define_structs_from_file_contents(
+        dir_path.as_ref(),
+        struct_name.as_ref(),
+        None,
+        options,
+    )?;
+    Ok(tokens.to_string())
+}
+
+pub fn generate_enum<SrcPath: AsRef<Path>, Name: AsRef<str>>(
+    src_path: SrcPath,
+    enum_name: Name,
+    options: &WipOptions,
+) -> Result<String, WipError> {
+    let path = src_path.as_ref();
+    let value = parsing::parse_source_file(path, options)?.assume_struct()?;
+    let tokens = codegen::define_enum_from_keys(&value, enum_name.as_ref(), Some(path), options)?;
+    Ok(tokens.to_string())
+}
+
+pub fn generate_enum_from_source<Source: AsRef<str>, Name: AsRef<str>>(
+    source: Source,
+    enum_name: Name,
+    format: Format,
+    options: &WipOptions,
+) -> Result<String, WipError> {
+    let value = parsing::parse_source(source.as_ref(), format, options)?.assume_struct()?;
+    let tokens = codegen::define_enum_from_keys(&value, enum_name.as_ref(), None, options)?;
+    Ok(tokens.to_string())
+}
+
+pub fn generate_enum_from_filenames<DirPath: AsRef<Path>, Name: AsRef<str>>(
+    dir_path: DirPath,
+    enum_name: Name,
+    options: &WipOptions,
+) -> Result<String, WipError> {
+    let tokens =
+        codegen::define_enum_from_filenames(dir_path.as_ref(), enum_name.as_ref(), options)?;
+    Ok(tokens.to_string())
+}
+
+pub fn create_structs<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
+    src_path: SrcPath,
+    dest_path: DestPath,
+    struct_name: Name,
+    options: &WipOptions,
+) -> Result<(), WipError> {
+    let output = generate_structs(src_path, struct_name, options)?;
+    files::ensure_destination(dest_path.as_ref(), true)?;
+    files::write_destination(dest_path.as_ref(), output, true)?;
+
+    Ok(())
+}
+
+pub fn create_structs_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: AsRef<str>>(
+    source: Source,
+    dest_path: DestPath,
+    struct_name: Name,
+    format: Format,
+    options: &WipOptions,
+) -> Result<(), WipError> {
+    let output = generate_structs_from_source(source, struct_name, format, options)?;
+    files::ensure_destination(dest_path.as_ref(), true)?;
+    files::write_destination(dest_path.as_ref(), output, true)?;
+
+    Ok(())
+}
+
+pub fn create_structs_from_files<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
+    dir_path: DirPath,
+    dest_path: DestPath,
+    struct_name: Name,
+    options: &WipOptions,
+) -> Result<(), WipError> {
+    let output = generate_structs_from_files(dir_path, struct_name, options)?;
+    files::ensure_destination(dest_path.as_ref(), true)?;
+    files::write_destination(dest_path.as_ref(), output, true)?;
+
+    Ok(())
+}
+
+pub fn create_enum<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
+    src_path: SrcPath,
+    dest_path: DestPath,
+    enum_name: Name,
+    options: &WipOptions,
+) -> Result<(), WipError> {
+    let output = generate_enum(src_path, enum_name, options)?;
+    files::ensure_destination(dest_path.as_ref(), true)?;
+    files::write_destination(dest_path.as_ref(), output, true)?;
+
+    Ok(())
+}
+
+pub fn create_enum_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: AsRef<str>>(
+    source: Source,
+    dest_path: DestPath,
+    enum_name: Name,
+    format: Format,
+    options: &WipOptions,
+) -> Result<(), WipError> {
+    let output = generate_enum_from_source(source, enum_name, format, options)?;
+    files::ensure_destination(dest_path.as_ref(), true)?;
+    files::write_destination(dest_path.as_ref(), output, true)?;
+
+    Ok(())
+}
+
+pub fn create_enum_from_filenames<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
+    dir_path: DirPath,
+    dest_path: DestPath,
+    enum_name: Name,
+    options: &WipOptions,
+) -> Result<(), WipError> {
+    let output = generate_enum_from_filenames(dir_path, enum_name, options)?;
+    files::ensure_destination(dest_path.as_ref(), true)?;
+    files::write_destination(dest_path.as_ref(), output, true)?;
+
+    Ok(())
+}

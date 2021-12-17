@@ -1,4 +1,4 @@
-use edres::{gen, parsing, value::Value, SerdeSupport, WipOptions};
+use edres::{codegen, parsing, value::Value, SerdeSupport, WipOptions};
 
 fn main() {
     build().unwrap();
@@ -40,7 +40,7 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                 _ => panic!("Not a struct!"),
             };
 
-            let source = gen::define_structs(&value, "Struct", Some(path.as_ref()), &options)?;
+            let source = codegen::define_structs(&value, "Struct", Some(path.as_ref()), &options)?;
             writeln!(&mut buffer, "{}", source.to_string())?;
         }
 
@@ -52,7 +52,8 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                 _ => panic!("Not a struct!"),
             };
 
-            let source = gen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options)?;
+            let source =
+                codegen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options)?;
             writeln!(&mut buffer, "{}", source.to_string())?;
         }
 
@@ -64,21 +65,21 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                 _ => panic!("Not a struct!"),
             };
 
-            let source = gen::define_structs_from_values(&value, "VStruct", &options)?;
+            let source = codegen::define_structs_from_values(&value, "VStruct", &options)?;
             writeln!(&mut buffer, "{}", source.to_string())?;
         }
 
         // define_enum_from_filenames
         {
             let path = format!("data/{}/files", dir);
-            let source = gen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options)?;
+            let source = codegen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options)?;
             writeln!(&mut buffer, "{}", source.to_string())?;
         }
 
         // define_structs_from_file_contents
         {
             let path = format!("data/{}/files", dir);
-            let source = gen::define_structs_from_file_contents(
+            let source = codegen::define_structs_from_file_contents(
                 path.as_ref(),
                 "FileStruct",
                 None,

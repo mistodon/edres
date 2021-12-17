@@ -30,28 +30,15 @@ It's a pipeline!
     - TokenStream -> string
     - TokenStream -> file
 
-- [x] define_structs_from_file_contents
-- [x] in define_enum_from_filenames, optionally produce values too
-    - [x] but also don't even parse files if not
-- [x] Move fs tests to the tests folder
-- [x] test the entire gen module (via test crate)
-- [ ] replace the guts of the public API to use gen
-- [ ] delete old generation module (and rename gen to codegen)
-- ...
-- [ ] Delete unused pub(crate) functions in parsing modules
-- [ ] Fix names (parse_whatever2 -> parse_whatever)
-- [ ] Start designing public API:
-    - generate or create (output type)
-    - struct or enum
-    - from_file (default) or from_source or from_files/from_file_names
-    - 2 * 2 * 3 = 12 top-level functions, that's no too bad
+- [ ] Fix up (and refactor) Option types
+- [ ] Fix up and refactor Error types
+- [ ] Load fns?
+- [ ] Validation?
 - [ ] Implement proc macro crate
     - define_structs
     - define_enums
     - define_enum_from_dir
     - define_structs_from_dir
-- [ ] Fix up (and refactor) Option types
-- [ ] Fix up and refactor Error types
 - [ ] Update docs
 - [ ] CI?
 

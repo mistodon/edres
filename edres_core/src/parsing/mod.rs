@@ -10,17 +10,11 @@ pub mod toml;
 #[cfg(feature = "yaml-parsing")]
 pub mod yaml;
 
-use std::collections::BTreeMap;
 use std::path::Path;
-
-use crate::{
-    options::{FloatSize, IntSize, StructOptions},
-    value::{GenericStruct, GenericValue},
-};
 
 use crate::error::WipError;
 use crate::format::Format;
-use crate::options::WipOptions;
+use crate::options::{FloatSize, IntSize, WipOptions};
 use crate::value::Value;
 
 pub fn parse_source_file(file: &Path, options: &WipOptions) -> Result<Value, WipError> {
@@ -68,58 +62,14 @@ pub fn unify_values(_values: &mut [Value]) -> Result<(), WipError> {
     Ok(())
 }
 
-pub(crate) type ParsedFields<T> = BTreeMap<String, T>;
-
-pub(crate) fn parsed_to_generic_struct<T, F>(
-    parsed_config: ParsedFields<T>,
-    options: &StructOptions,
-    convert_fn: F,
-) -> GenericStruct
-where
-    F: Fn(&str, &str, T, &StructOptions) -> GenericValue,
-{
-    let struct_name = "Config".to_owned();
-
-    let fields = parsed_config
-        .into_iter()
-        .map(|(key, value)| {
-            let value = convert_fn("_Config", &key, value, options);
-            (key, value)
-        })
-        .collect();
-
-    GenericStruct {
-        struct_name,
-        fields,
-    }
-}
-
-pub(crate) fn preferred_float(value: f64, preferred: FloatSize) -> GenericValue {
-    match preferred {
-        FloatSize::F32 => GenericValue::F32(value as f32),
-        FloatSize::F64 => GenericValue::F64(value),
-    }
-}
-
-pub(crate) fn preferred_int(value: i64, preferred: IntSize) -> GenericValue {
-    match preferred {
-        IntSize::I8 => GenericValue::I8(value as i8),
-        IntSize::I16 => GenericValue::I16(value as i16),
-        IntSize::I32 => GenericValue::I32(value as i32),
-        IntSize::I64 => GenericValue::I64(value),
-        IntSize::I128 => unimplemented!(),
-        IntSize::ISize => GenericValue::ISize(value as isize),
-    }
-}
-
-pub(crate) fn preferred_float2(value: f64, preferred: FloatSize) -> Value {
+pub(crate) fn preferred_float(value: f64, preferred: FloatSize) -> Value {
     match preferred {
         FloatSize::F32 => Value::F32(value as f32),
         FloatSize::F64 => Value::F64(value),
     }
 }
 
-pub(crate) fn preferred_int2(value: i128, preferred: IntSize) -> Value {
+pub(crate) fn preferred_int(value: i128, preferred: IntSize) -> Value {
     match preferred {
         IntSize::I8 => Value::I8(value as i8),
         IntSize::I16 => Value::I16(value as i16),
