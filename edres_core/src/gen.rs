@@ -470,13 +470,16 @@ pub fn define_enum_from_filenames(
         });
     }
 
-    // TODO: Optionally fill
     let mut values = vec![];
+    if options.all_values_const_name.is_some() {
+        values = values_from_file_contents(root, None, options)?;
+    }
+
     let use_values = !values.is_empty();
 
     define_enum_from_variants_and_values(
         filenames.into_iter(),
-        values,
+        values.iter(),
         use_values,
         enum_name,
         Some(root),
@@ -485,32 +488,38 @@ pub fn define_enum_from_filenames(
     )
 }
 
+fn values_from_file_contents(
+    root: &Path,
+    format: Option<Format>,
+    options: &WipOptions,
+) -> Result<Vec<Value>, WipError> {
+    use ignore::WalkBuilder;
+
+    let walk = WalkBuilder::new(root)
+        .max_depth(Some(1))
+        .sort_by_file_name(std::ffi::OsStr::cmp)
+        .filter_entry(|entry| entry.file_type().map(|ft| ft.is_file()).unwrap_or(false))
+        .build();
+
+    walk.into_iter()
+        .skip(1)
+        .map(|entry| {
+            entry
+                .map_err(|e| WipError(e.to_string()))
+                .and_then(|entry| {
+                    parsing::parse_source_file_with_format(entry.path(), format, options)
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()
+}
+
 pub fn define_structs_from_file_contents(
     root: &Path,
     struct_name: &str,
     format: Option<Format>,
     options: &WipOptions,
 ) -> Result<TokenStream, WipError> {
-    use ignore::WalkBuilder;
-
-    let values: Vec<Value> = {
-        let walk = WalkBuilder::new(root)
-            .max_depth(Some(1))
-            .sort_by_file_name(std::ffi::OsStr::cmp)
-            .filter_entry(|entry| entry.file_type().map(|ft| ft.is_file()).unwrap_or(false))
-            .build();
-
-        walk.into_iter()
-            .skip(1)
-            .map(|entry| {
-                entry
-                    .map_err(|e| WipError(e.to_string()))
-                    .and_then(|entry| {
-                        parsing::parse_source_file_with_format(entry.path(), format, options)
-                    })
-            })
-            .collect::<Result<Vec<_>, _>>()?
-    };
+    let values = values_from_file_contents(root, format, options)?;
     let (value_type, values, new_struct_tokens) =
         establish_types_for_values(values.iter(), struct_name, options)?;
 
@@ -1490,6 +1499,7 @@ mod tests {
                 get_string_fn_name: Some("string".into()),
                 file_bytes_const_name: Some("BYTES".into()),
                 get_bytes_fn_name: Some("bytes".into()),
+                all_values_const_name: None,
                 ..WipOptions::new()
             },
         )

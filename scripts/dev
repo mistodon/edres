@@ -3,4 +3,4 @@
 set -eu
 set -o pipefail
 
-cargo watch -x "test --all-features"
+(cd edres_core && cargo watch -x "test --all-features")
