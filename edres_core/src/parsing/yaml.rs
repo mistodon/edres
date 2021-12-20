@@ -1,19 +1,18 @@
 use serde_yaml::{self, Value as YamlValue};
 
 use crate::{
-    error::WipError,
+    error::Error,
     options::ParseOptions,
     parsing,
     value::{Struct, Value},
 };
 
-pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, WipError> {
-    let raw_value: YamlValue =
-        serde_yaml::from_str(source).map_err(|err| WipError(err.to_string()))?;
+pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
+    let raw_value: YamlValue = serde_yaml::from_str(source)?;
     parse_value(raw_value, options)
 }
 
-pub fn parse_value(raw_value: YamlValue, options: &ParseOptions) -> Result<Value, WipError> {
+pub fn parse_value(raw_value: YamlValue, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
@@ -22,7 +21,7 @@ pub fn parse_value(raw_value: YamlValue, options: &ParseOptions) -> Result<Value
 pub fn parse_value_non_unified(
     raw_value: YamlValue,
     options: &ParseOptions,
-) -> Result<Value, WipError> {
+) -> Result<Value, Error> {
     Ok(match raw_value {
         YamlValue::Null => Value::Option(None),
         YamlValue::Bool(value) => Value::Bool(value),
@@ -30,7 +29,7 @@ pub fn parse_value_non_unified(
             (Some(x), _, _) => parsing::preferred_int(x as i128, options.default_int_size),
             (None, Some(x), _) => parsing::preferred_int(x as i128, options.default_int_size),
             (None, None, Some(x)) => parsing::preferred_float(x, options.default_float_size),
-            _ => return Err(WipError("Failed to parse number".into())),
+            _ => return Err(Error::ErrorParsingNumber),
         },
         YamlValue::String(value) => Value::String(value),
         YamlValue::Sequence(values) => parsing::array_or_vec(
@@ -44,13 +43,10 @@ pub fn parse_value_non_unified(
             values
                 .into_iter()
                 .map(|(key, value)| {
-                    let key = key
-                        .as_str()
-                        .ok_or_else(|| WipError("Could not read key".into()))?
-                        .to_owned();
+                    let key = key.as_str().ok_or(Error::ExpectedStringKey)?.to_owned();
                     parse_value_non_unified(value, options).map(|value| (key, value))
                 })
-                .collect::<Result<_, WipError>>()?,
+                .collect::<Result<_, Error>>()?,
         )),
     })
 }

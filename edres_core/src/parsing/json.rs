@@ -1,19 +1,18 @@
 use serde_json::{self, Value as JsonValue};
 
 use crate::{
-    error::WipError,
+    error::Error,
     options::ParseOptions,
     parsing,
     value::{Struct, Value},
 };
 
-pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, WipError> {
-    let raw_value: JsonValue =
-        serde_json::from_str(source).map_err(|err| WipError(err.to_string()))?;
+pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
+    let raw_value: JsonValue = serde_json::from_str(source)?;
     parse_value(raw_value, options)
 }
 
-pub fn parse_value(raw_value: JsonValue, options: &ParseOptions) -> Result<Value, WipError> {
+pub fn parse_value(raw_value: JsonValue, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
@@ -22,7 +21,7 @@ pub fn parse_value(raw_value: JsonValue, options: &ParseOptions) -> Result<Value
 pub fn parse_value_non_unified(
     raw_value: JsonValue,
     options: &ParseOptions,
-) -> Result<Value, WipError> {
+) -> Result<Value, Error> {
     Ok(match raw_value {
         JsonValue::Null => Value::Option(None),
         JsonValue::Bool(value) => Value::Bool(value),
@@ -30,7 +29,7 @@ pub fn parse_value_non_unified(
             (Some(x), _, _) => parsing::preferred_int(x as i128, options.default_int_size),
             (None, Some(x), _) => parsing::preferred_int(x as i128, options.default_int_size),
             (None, None, Some(x)) => parsing::preferred_float(x, options.default_float_size),
-            _ => return Err(WipError("Failed to parse number".into())),
+            _ => return Err(Error::ErrorParsingNumber),
         },
         JsonValue::String(value) => Value::String(value),
         JsonValue::Array(values) => parsing::array_or_vec(
@@ -46,7 +45,7 @@ pub fn parse_value_non_unified(
                 .map(|(key, value)| {
                     parse_value_non_unified(value, options).map(|value| (key, value))
                 })
-                .collect::<Result<_, WipError>>()?,
+                .collect::<Result<_, Error>>()?,
         )),
     })
 }

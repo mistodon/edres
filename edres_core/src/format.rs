@@ -20,7 +20,7 @@ pub enum Format {
 }
 
 impl Format {
-    pub fn from_filename(filename: &Path) -> Result<Self, GenerationError> {
+    pub fn from_filename(filename: &Path) -> Result<Self, Error> {
         match filename.extension() {
             Some(ext) => match ext.to_string_lossy().as_ref() {
                 #[cfg(feature = "json-parsing")]
@@ -35,9 +35,9 @@ impl Format {
                 #[cfg(feature = "yaml-parsing")]
                 "yaml" | "yml" => Ok(Format::Yaml),
 
-                other => Err(GenerationError::UnknownInputFormat(other.into())),
+                other => Err(Error::UnknownInputFormat(Some(other.into()))),
             },
-            None => Err(GenerationError::UnknownInputFormat("<none>".into())),
+            None => Err(Error::UnknownInputFormat(None)),
         }
     }
 }

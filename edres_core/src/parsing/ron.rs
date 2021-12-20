@@ -14,21 +14,18 @@ use ron::{
 };
 
 use crate::{
-    error::WipError,
+    error::Error,
     options::ParseOptions,
     parsing,
     value::{Struct, Value},
 };
 
-pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, WipError> {
-    let raw_value: RonValue = ron::de::from_str(source).map_err(|err| WipError(err.to_string()))?;
+pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
+    let raw_value: RonValue = ron::de::from_str(source)?;
     parse_value_non_unified(raw_value, options)
 }
 
-pub fn parse_value(
-    raw_value: ron::value::Value,
-    options: &ParseOptions,
-) -> Result<Value, WipError> {
+pub fn parse_value(raw_value: ron::value::Value, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
@@ -37,7 +34,7 @@ pub fn parse_value(
 pub fn parse_value_non_unified(
     raw_value: ron::value::Value,
     options: &ParseOptions,
-) -> Result<Value, WipError> {
+) -> Result<Value, Error> {
     Ok(match raw_value {
         RonValue::Unit => Value::Unit,
         RonValue::Bool(value) => Value::Bool(value),
@@ -69,11 +66,11 @@ pub fn parse_value_non_unified(
                 .map(|(key, value)| {
                     let key = match key {
                         RonValue::String(key) => key.to_owned(),
-                        _ => return Err(WipError("Keys in maps must be strings".into())),
+                        _ => return Err(Error::ExpectedStringKey),
                     };
                     parse_value_non_unified(value.clone(), options).map(|value| (key, value))
                 })
-                .collect::<Result<_, WipError>>()?,
+                .collect::<Result<_, Error>>()?,
         )),
     })
 }

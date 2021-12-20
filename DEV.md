@@ -31,7 +31,7 @@ It's a pipeline!
     - TokenStream -> file
 
 - [x] Fix up (and refactor) Option types
-- [ ] Fix up and refactor Error types
+- [x] Fix up and refactor Error types
 - [ ] Load fns?
 - [ ] Validation?
 - [ ] Implement proc macro crate

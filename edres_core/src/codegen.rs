@@ -4,7 +4,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::{
-    error::WipError,
+    error::Error,
     options::{Options, SerdeSupport},
     parsing,
     value::{Struct, Value},
@@ -16,7 +16,7 @@ pub fn define_structs(
     struct_name: &str,
     source_file_path: Option<&Path>,
     options: &Options,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     let derives = derive_attribute(
         options.structs.derived_traits.as_ref(),
         options.serde_support,
@@ -67,7 +67,7 @@ fn define_structs_inner(
     struct_name: &str,
     options: &Options,
     derives: Option<&TokenStream>,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     let mut fields = vec![];
     let mut sub_structs = vec![];
 
@@ -80,7 +80,7 @@ fn define_structs_inner(
     let sub_structs: Vec<TokenStream> = sub_structs
         .iter()
         .map(|(name, value)| define_structs_inner(value, name, options, derives))
-        .collect::<Result<_, WipError>>()?;
+        .collect::<Result<_, Error>>()?;
 
     let struct_name = format_ident!("{}", struct_name);
     let derives = derives.into_iter();
@@ -103,7 +103,7 @@ fn define_structs_for_value(
     root_struct_name: &str,
     options: &Options,
     dest: &mut Vec<TokenStream>,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let derives = derive_attribute(
         options.structs.derived_traits.as_ref(),
         options.serde_support,
@@ -151,7 +151,7 @@ fn define_enum_from_variants_and_values<'a, IK, IV, S>(
     source_file_path: Option<&Path>,
     options: &Options,
     mut inherents: Vec<TokenStream>,
-) -> Result<TokenStream, WipError>
+) -> Result<TokenStream, Error>
 where
     IK: IntoIterator<Item = S>,
     IK::IntoIter: Clone,
@@ -310,7 +310,7 @@ pub fn define_enum_from_keys(
     enum_name: &str,
     source_file_path: Option<&Path>,
     options: &Options,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     define_enum_from_variants_and_values(
         data.0.keys(),
         data.0.values(),
@@ -326,7 +326,7 @@ pub fn define_structs_from_values(
     data: &Struct,
     struct_name: &str,
     options: &Options,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     let (value_type, values, new_struct_tokens) =
         establish_types_for_values(data.0.values(), struct_name, options)?;
 
@@ -361,10 +361,10 @@ fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
     values: I,
     struct_name: &str,
     options: &Options,
-) -> Result<(TokenStream, Vec<Value>, Vec<TokenStream>), WipError> {
+) -> Result<(TokenStream, Vec<Value>, Vec<TokenStream>), Error> {
     let mut values = values.into_iter().map(Clone::clone).collect::<Vec<_>>();
     if values.is_empty() {
-        return Err(WipError("Need values in map".into()));
+        return Err(Error::ExpectedValuesInMap);
     }
     parsing::unify_values(&mut values)?;
     let first = &values[0];
@@ -384,7 +384,7 @@ pub fn define_enum_from_filenames(
     root: &Path,
     enum_name: &str,
     options: &Options,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     use case::CaseExt;
     use ignore::WalkBuilder;
 
@@ -397,11 +397,7 @@ pub fn define_enum_from_filenames(
 
         walk.into_iter()
             .skip(1)
-            .map(|entry| {
-                entry
-                    .map_err(|e| WipError(e.to_string()))
-                    .map(|entry| entry.path().to_string_lossy().into_owned())
-            })
+            .map(|entry| entry.map(|entry| entry.path().to_string_lossy().into_owned()))
             .collect::<Result<Vec<_>, _>>()?
     };
 
@@ -411,7 +407,7 @@ pub fn define_enum_from_filenames(
             <String as AsRef<Path>>::as_ref(path)
                 .file_stem()
                 .map(|name| name.to_string_lossy().into_owned())
-                .ok_or_else(|| WipError("No file stem".into()))
+                .ok_or_else(|| Error::UnsupportedFilePath(path.to_string()))
                 .map(|s| s.to_camel())
         })
         .collect::<Result<Vec<_>, _>>()?;
@@ -502,7 +498,7 @@ fn values_from_file_contents(
     root: &Path,
     format: Option<Format>,
     options: &Options,
-) -> Result<Vec<Value>, WipError> {
+) -> Result<Vec<Value>, Error> {
     use ignore::WalkBuilder;
 
     let walk = WalkBuilder::new(root)
@@ -513,13 +509,7 @@ fn values_from_file_contents(
 
     walk.into_iter()
         .skip(1)
-        .map(|entry| {
-            entry
-                .map_err(|e| WipError(e.to_string()))
-                .and_then(|entry| {
-                    parsing::parse_source_file_with_format(entry.path(), format, &options.parse)
-                })
-        })
+        .map(|entry| parsing::parse_source_file_with_format(entry?.path(), format, &options.parse))
         .collect::<Result<Vec<_>, _>>()
 }
 
@@ -528,7 +518,7 @@ pub fn define_structs_from_file_contents(
     struct_name: &str,
     format: Option<Format>,
     options: &Options,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     let values = values_from_file_contents(root, format, options)?;
     let (value_type, values, new_struct_tokens) =
         establish_types_for_values(values.iter(), struct_name, options)?;
@@ -608,7 +598,7 @@ fn type_of_value<'a>(
     under_key: Option<&str>,
     under_index: Option<usize>,
     new_structs: &mut Vec<(String, &'a Struct)>,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     Ok(match value {
         Value::Unit => quote!(()),
         Value::Bool(_) => quote!(bool),
@@ -656,7 +646,7 @@ fn type_of_value<'a>(
                 .iter()
                 .enumerate()
                 .map(|(i, v)| type_of_value(v, struct_name, under_key, Some(i), new_structs))
-                .collect::<Result<Vec<_>, WipError>>()?;
+                .collect::<Result<Vec<_>, Error>>()?;
             quote!((#(#types_in_tuple),*))
         }
         Value::Struct(mapping) => {
@@ -682,7 +672,7 @@ fn define_value(
     struct_name: &str,
     under_key: Option<&str>,
     under_index: Option<usize>,
-) -> Result<TokenStream, WipError> {
+) -> Result<TokenStream, Error> {
     Ok(match value {
         Value::Unit => quote!(()),
         Value::Bool(x) => quote!(#x),
@@ -713,14 +703,14 @@ fn define_value(
             let values = values
                 .iter()
                 .map(|value| define_value(value, struct_name, under_key, under_index))
-                .collect::<Result<Vec<_>, WipError>>()?;
+                .collect::<Result<Vec<_>, Error>>()?;
             quote!([#(#values,)*])
         }
         Value::Vec(values) => {
             let values = values
                 .iter()
                 .map(|value| define_value(value, struct_name, under_key, under_index))
-                .collect::<Result<Vec<_>, WipError>>()?;
+                .collect::<Result<Vec<_>, Error>>()?;
             quote!(std::borrow::Cow::Borrowed(&[#(#values,)*]))
         }
         Value::Tuple(values) => {
@@ -728,7 +718,7 @@ fn define_value(
                 .iter()
                 .enumerate()
                 .map(|(i, value)| define_value(value, struct_name, under_key, Some(i)))
-                .collect::<Result<Vec<_>, WipError>>()?;
+                .collect::<Result<Vec<_>, Error>>()?;
             quote!((#(#values),*))
         }
         Value::Struct(fields) => {
@@ -746,7 +736,7 @@ fn define_value(
     })
 }
 
-fn define_struct_value(data: &Struct, struct_name: &str) -> Result<TokenStream, WipError> {
+fn define_struct_value(data: &Struct, struct_name: &str) -> Result<TokenStream, Error> {
     let mut fields = vec![];
 
     for (key, value) in data.0.iter() {

@@ -14,8 +14,4 @@ mod format;
 )))]
 compile_error!("The edres crate requires at least one parsing feature to be enabled:\n {json-parsing, ron-parsing, toml-parsing, yaml-parsing}");
 
-pub use crate::{
-    error::{Error, GenerationError, OptionsError, WipError},
-    format::Format,
-    options::*,
-};
+pub use crate::{error::Error, format::Format, options::*};

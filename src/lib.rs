@@ -21,7 +21,7 @@ pub fn generate_structs<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     struct_name: Name,
     options: &Options,
-) -> Result<String, WipError> {
+) -> Result<String, Error> {
     let path = src_path.as_ref();
     let value = parsing::parse_source_file(path, &options.parse)?.assume_struct()?;
     let tokens = codegen::define_structs(&value, struct_name.as_ref(), Some(path), options)?;
@@ -33,7 +33,7 @@ pub fn generate_structs_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     struct_name: Name,
     format: Format,
     options: &Options,
-) -> Result<String, WipError> {
+) -> Result<String, Error> {
     let value = parsing::parse_source(source.as_ref(), format, &options.parse)?.assume_struct()?;
     let tokens = codegen::define_structs(&value, struct_name.as_ref(), None, options)?;
     Ok(tokens.to_string())
@@ -43,7 +43,7 @@ pub fn generate_structs_from_files<DirPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     struct_name: Name,
     options: &Options,
-) -> Result<String, WipError> {
+) -> Result<String, Error> {
     let tokens = codegen::define_structs_from_file_contents(
         dir_path.as_ref(),
         struct_name.as_ref(),
@@ -57,7 +57,7 @@ pub fn generate_enum<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     enum_name: Name,
     options: &Options,
-) -> Result<String, WipError> {
+) -> Result<String, Error> {
     let path = src_path.as_ref();
     let value = parsing::parse_source_file(path, &options.parse)?.assume_struct()?;
     let tokens = codegen::define_enum_from_keys(&value, enum_name.as_ref(), Some(path), options)?;
@@ -69,7 +69,7 @@ pub fn generate_enum_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     enum_name: Name,
     format: Format,
     options: &Options,
-) -> Result<String, WipError> {
+) -> Result<String, Error> {
     let value = parsing::parse_source(source.as_ref(), format, &options.parse)?.assume_struct()?;
     let tokens = codegen::define_enum_from_keys(&value, enum_name.as_ref(), None, options)?;
     Ok(tokens.to_string())
@@ -79,7 +79,7 @@ pub fn generate_enum_from_filenames<DirPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     enum_name: Name,
     options: &Options,
-) -> Result<String, WipError> {
+) -> Result<String, Error> {
     let tokens =
         codegen::define_enum_from_filenames(dir_path.as_ref(), enum_name.as_ref(), options)?;
     Ok(tokens.to_string())
@@ -90,7 +90,7 @@ pub fn create_structs<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<s
     dest_path: DestPath,
     struct_name: Name,
     options: &Options,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let output = generate_structs(src_path, struct_name, options)?;
     files::ensure_destination(dest_path.as_ref(), options.output.create_dirs)?;
     files::write_destination(
@@ -108,7 +108,7 @@ pub fn create_structs_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Nam
     struct_name: Name,
     format: Format,
     options: &Options,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let output = generate_structs_from_source(source, struct_name, format, options)?;
     files::ensure_destination(dest_path.as_ref(), options.output.create_dirs)?;
     files::write_destination(
@@ -125,7 +125,7 @@ pub fn create_structs_from_files<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Na
     dest_path: DestPath,
     struct_name: Name,
     options: &Options,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let output = generate_structs_from_files(dir_path, struct_name, options)?;
     files::ensure_destination(dest_path.as_ref(), options.output.create_dirs)?;
     files::write_destination(
@@ -142,7 +142,7 @@ pub fn create_enum<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>
     dest_path: DestPath,
     enum_name: Name,
     options: &Options,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let output = generate_enum(src_path, enum_name, options)?;
     files::ensure_destination(dest_path.as_ref(), options.output.create_dirs)?;
     files::write_destination(
@@ -160,7 +160,7 @@ pub fn create_enum_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: 
     enum_name: Name,
     format: Format,
     options: &Options,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let output = generate_enum_from_source(source, enum_name, format, options)?;
     files::ensure_destination(dest_path.as_ref(), options.output.create_dirs)?;
     files::write_destination(
@@ -177,7 +177,7 @@ pub fn create_enum_from_filenames<DirPath: AsRef<Path>, DestPath: AsRef<Path>, N
     dest_path: DestPath,
     enum_name: Name,
     options: &Options,
-) -> Result<(), WipError> {
+) -> Result<(), Error> {
     let output = generate_enum_from_filenames(dir_path, enum_name, options)?;
     files::ensure_destination(dest_path.as_ref(), options.output.create_dirs)?;
     files::write_destination(

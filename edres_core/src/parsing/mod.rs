@@ -13,15 +13,15 @@ pub mod yaml;
 use std::path::Path;
 
 use crate::{
-    error::WipError,
+    error::Error,
     format::Format,
     options::{FloatSize, IntSize, ParseOptions},
     value::Value,
 };
 
-pub fn parse_source_file(file: &Path, options: &ParseOptions) -> Result<Value, WipError> {
-    let source = std::fs::read_to_string(file).map_err(|x| WipError(x.to_string()))?;
-    let format = Format::from_filename(file).map_err(|x| WipError(x.to_string()))?;
+pub fn parse_source_file(file: &Path, options: &ParseOptions) -> Result<Value, Error> {
+    let source = std::fs::read_to_string(file)?;
+    let format = Format::from_filename(file)?;
     parse_source(&source, format, options)
 }
 
@@ -29,20 +29,16 @@ pub(crate) fn parse_source_file_with_format(
     file: &Path,
     format: Option<Format>,
     options: &ParseOptions,
-) -> Result<Value, WipError> {
-    let source = std::fs::read_to_string(file).map_err(|x| WipError(x.to_string()))?;
+) -> Result<Value, Error> {
+    let source = std::fs::read_to_string(file)?;
     let format = match format {
-        None => Format::from_filename(file).map_err(|x| WipError(x.to_string()))?,
+        None => Format::from_filename(file)?,
         Some(x) => x,
     };
     parse_source(&source, format, options)
 }
 
-pub fn parse_source(
-    source: &str,
-    format: Format,
-    options: &ParseOptions,
-) -> Result<Value, WipError> {
+pub fn parse_source(source: &str, format: Format, options: &ParseOptions) -> Result<Value, Error> {
     match format {
         #[cfg(feature = "json-parsing")]
         Format::Json => json::parse_source(source, options),
@@ -58,12 +54,12 @@ pub fn parse_source(
     }
 }
 
-pub fn unify_value(_value: &mut Value) -> Result<(), WipError> {
+pub fn unify_value(_value: &mut Value) -> Result<(), Error> {
     // TODO: unify_values in all sequences
     Ok(())
 }
 
-pub fn unify_values(_values: &mut [Value]) -> Result<(), WipError> {
+pub fn unify_values(_values: &mut [Value]) -> Result<(), Error> {
     // TODO: Unify values in this sequence
     Ok(())
 }
