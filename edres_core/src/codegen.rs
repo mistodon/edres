@@ -26,15 +26,61 @@ pub fn define_structs(
     let struct_tokens = define_structs_inner(data, struct_name, options, derives.as_ref())?;
 
     let mut inherents = vec![];
-    if let (Some(source_file_path), Some(const_name)) =
-        (source_file_path, options.source_path_const_name.as_ref())
-    {
-        let source_file_path = source_file_path.display().to_string();
-        let source_path_const_name = format_ident!("{}", const_name);
-        inherents.push(quote! {
-            pub const #source_path_const_name: &'static str = #source_file_path;
-        });
+
+    if let Some(source_file_path) = source_file_path {
+        if let Some(const_name) = &options.source_path_const_name {
+            let source_file_path = source_file_path.display().to_string();
+            let source_path_const_name = format_ident!("{}", const_name);
+            inherents.push(quote! {
+                pub const #source_path_const_name: &'static str = #source_file_path;
+            });
+        }
+
+        // Loading
+        {
+            let format = Format::from_filename(source_file_path.as_ref())?;
+            let parse_fn = format.parse_fn();
+
+            if let Some(fn_name) = &options.loading.load_from_file_fn_name {
+                let fn_name = format_ident!("{}", fn_name);
+                inherents.push(quote! {
+                    pub fn #fn_name(path: &std::path::Path) -> Option<Self> {
+                        let src = std::fs::read_to_string(path).ok()?;
+                        #parse_fn(&str).ok()
+                    }
+                });
+            }
+
+            if let Some(fn_name) = &options.loading.load_fn_name {
+                let fn_name = format_ident!("{}", fn_name);
+                inherents.push(quote! {
+                    pub fn #fn_name() -> Option<Self> {
+                        let src = std::fs::read_to_string(#source_file_path).ok()?;
+                        #parse_fn(&src).ok()
+                    }
+                });
+            }
+
+            if let (Some(fn_name), Some(const_name)) = (
+                &options.loading.fetch_fn_name,
+                &options.structs.struct_data_const_name,
+            ) {
+                let fn_name = format_ident!("{}", fn_name);
+                let const_name = format_ident!("{}", const_name);
+                inherents.push(quote! {
+                    pub fn #fn_name(from_file: bool) -> Option<std::borrow::Cow<'static, Self>> {
+                        if from_file {
+                            let src = std::fs::read_to_string(#source_file_path).ok()?;
+                            #parse_fn(&src).ok()
+                        } else {
+                            Some(std::borrow::Cow::Borrowed(&Self::#const_name))
+                        }
+                    }
+                });
+            }
+        }
     }
+
     if let Some(const_name) = &options.structs.struct_data_const_name {
         let struct_value = define_struct_value(data, struct_name)?;
         let struct_name = format_ident!("{}", struct_name);
@@ -311,6 +357,8 @@ pub fn define_enum_from_keys(
     source_file_path: Option<&Path>,
     options: &Options,
 ) -> Result<TokenStream, Error> {
+    let mut _inherents = vec![];
+
     define_enum_from_variants_and_values(
         data.0.keys(),
         data.0.values(),
@@ -318,7 +366,7 @@ pub fn define_enum_from_keys(
         enum_name,
         source_file_path,
         options,
-        vec![],
+        _inherents,
     )
 }
 

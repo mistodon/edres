@@ -9,6 +9,7 @@ pub struct Options {
     pub structs: StructOptions,
     pub enums: EnumOptions,
     pub files: FilesOptions,
+    pub loading: LoadOptions,
     pub output: OutputOptions,
 }
 
@@ -22,6 +23,7 @@ impl Options {
             structs: StructOptions::new(),
             enums: EnumOptions::new(),
             files: FilesOptions::new(),
+            loading: LoadOptions::new(),
             output: OutputOptions::new(),
         }
     }
@@ -35,6 +37,21 @@ impl Options {
             structs: StructOptions::new(),
             enums: EnumOptions::new(),
             files: FilesOptions::new(),
+            loading: LoadOptions::new(),
+            output: OutputOptions::new(),
+        }
+    }
+
+    pub const fn with_load() -> Options {
+        Options {
+            source_path_const_name: Some(Cow::Borrowed("SOURCE_PATH")),
+            serde_support: SerdeSupport::Yes,
+
+            parse: ParseOptions::new(),
+            structs: StructOptions::new(),
+            enums: EnumOptions::new(),
+            files: FilesOptions::new(),
+            loading: LoadOptions::full(),
             output: OutputOptions::new(),
         }
     }
@@ -48,6 +65,7 @@ impl Options {
             structs: StructOptions::minimal(),
             enums: EnumOptions::minimal(),
             files: FilesOptions::minimal(),
+            loading: LoadOptions::new(),
             output: OutputOptions::new(),
         }
     }
@@ -225,6 +243,37 @@ impl FilesOptions {
 impl Default for FilesOptions {
     fn default() -> Self {
         FilesOptions::new()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadOptions {
+    pub load_fn_name: Option<Cow<'static, str>>,
+    pub load_from_file_fn_name: Option<Cow<'static, str>>,
+    pub fetch_fn_name: Option<Cow<'static, str>>,
+}
+
+impl LoadOptions {
+    pub const fn new() -> Self {
+        LoadOptions {
+            load_fn_name: None,
+            load_from_file_fn_name: None,
+            fetch_fn_name: None,
+        }
+    }
+
+    pub const fn full() -> Self {
+        LoadOptions {
+            load_fn_name: Some(Cow::Borrowed("load")),
+            load_from_file_fn_name: Some(Cow::Borrowed("load_from_file")),
+            fetch_fn_name: Some(Cow::Borrowed("fetch")),
+        }
+    }
+}
+
+impl Default for LoadOptions {
+    fn default() -> Self {
+        LoadOptions::new()
     }
 }
 

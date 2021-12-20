@@ -40,4 +40,20 @@ impl Format {
             None => Err(Error::UnknownInputFormat(None)),
         }
     }
+
+    pub(crate) fn parse_fn(self) -> proc_macro2::TokenStream {
+        match self {
+            #[cfg(feature = "json-parsing")]
+            Format::Json => quote::quote!(serde_json::from_str),
+
+            #[cfg(feature = "ron-parsing")]
+            Format::Ron => quote::quote!(ron::from_str),
+
+            #[cfg(feature = "toml-parsing")]
+            Format::Toml => quote::quote!(toml::de::from_str),
+
+            #[cfg(feature = "yaml-parsing")]
+            Format::Yaml => quote::quote!(serde_yaml::from_str),
+        }
+    }
 }

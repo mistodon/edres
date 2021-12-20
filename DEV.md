@@ -33,6 +33,9 @@ It's a pipeline!
 - [x] Fix up (and refactor) Option types
 - [x] Fix up and refactor Error types
 - [ ] Load fns?
+    - load_from_file(path)
+    - load
+    - fetch(bool)
 - [ ] Validation?
 - [ ] Implement proc macro crate
     - define_structs
