@@ -44,7 +44,7 @@ macro_rules! gen_tests {
 
             #[test]
             fn deserialize_value_structs() {
-                use crate::gen::$modname::{Enum, VStruct, VALUES};
+                use crate::gen::$modname::{Enum, VStruct, DATA};
                 use std::collections::HashMap;
 
                 let src = std::fs::read_to_string(format!("data/{}/map.{}", $ext, $ext)).unwrap();
@@ -58,8 +58,8 @@ macro_rules! gen_tests {
                     assert_eq!(map[&Enum::Variant2].value, 2);
                 }
 
-                assert_eq!(VALUES[0].value, 1);
-                assert_eq!(VALUES[1].value, 2);
+                assert_eq!(DATA[0].value, 1);
+                assert_eq!(DATA[1].value, 2);
             }
 
             #[test]

@@ -2,7 +2,7 @@ use pretty_assertions::assert_eq;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use edres_core::{codegen, WipOptions};
+use edres_core::{codegen, options::*};
 
 fn assert_tokens(a: TokenStream, b: TokenStream) {
     assert_eq!(a.to_string(), b.to_string())
@@ -13,7 +13,7 @@ fn enum_from_filenames() {
     let result = codegen::define_enum_from_filenames(
         "tests/yamls".as_ref(),
         "FileName",
-        &WipOptions::minimal(),
+        &Options::minimal(),
     )
     .unwrap();
     assert_tokens(
@@ -32,9 +32,12 @@ fn enum_from_filenames_with_values() {
     let result = codegen::define_enum_from_filenames(
         "tests/yamls".as_ref(),
         "FileName",
-        &WipOptions {
-            all_values_const_name: Some("VALUES".into()),
-            ..WipOptions::minimal()
+        &Options {
+            enums: EnumOptions {
+                all_values_const_name: Some("VALUES".into()),
+                ..EnumOptions::minimal()
+            },
+            ..Options::minimal()
         },
     )
     .unwrap();
@@ -86,9 +89,12 @@ fn structs_from_file_contents() {
         "tests/yamls".as_ref(),
         "FileContent",
         None,
-        &WipOptions {
-            all_values_const_name: Some("VALUES".into()),
-            ..WipOptions::minimal()
+        &Options {
+            structs: StructOptions {
+                struct_data_const_name: Some("DATA".into()),
+                ..StructOptions::minimal()
+            },
+            ..Options::minimal()
         },
     )
     .unwrap();
@@ -107,7 +113,7 @@ fn structs_from_file_contents() {
                 pub text_again: std::borrow::Cow<'static, str>,
             }
 
-            pub const VALUES: &[FileContent] = &[
+            pub const DATA: &[FileContent] = &[
                 FileContent {
                     number: 100i64,
                     text: std::borrow::Cow::Borrowed("one hundred"),
@@ -132,20 +138,24 @@ fn enum_from_filenames_with_consts() {
     let result = codegen::define_enum_from_filenames(
         "tests/yamls".as_ref(),
         "FileName",
-        &WipOptions {
-            file_strings_const_name: Some("STRINGS".into()),
-            get_string_fn_name: Some("string".into()),
-            file_bytes_const_name: Some("BYTES".into()),
-            get_bytes_fn_name: Some("bytes".into()),
-            all_values_const_name: None,
-            ..WipOptions::new()
+        &Options {
+            files: FilesOptions {
+                file_strings_const_name: Some("STRINGS".into()),
+                get_string_fn_name: Some("string".into()),
+                file_bytes_const_name: Some("BYTES".into()),
+                get_bytes_fn_name: Some("bytes".into()),
+                ..FilesOptions::default()
+            },
+            enums: EnumOptions {
+                ..EnumOptions::minimal()
+            },
+            ..Options::new()
         },
     )
     .unwrap();
     assert_tokens(
         result,
         quote! {
-            #[derive(Debug)]
             pub enum FileName {
                 FileA,
                 FileB,
@@ -174,10 +184,6 @@ fn enum_from_filenames_with_consts() {
                     Self::STRINGS[self as usize]
                 }
                 pub const SOURCE_PATH: &'static str = "tests/yamls";
-                pub const ALL: &'static [Self] = &[
-                    Self::FileA,
-                    Self::FileB,
-                ];
             }
         },
     );

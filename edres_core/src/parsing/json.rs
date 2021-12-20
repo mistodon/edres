@@ -1,17 +1,19 @@
 use serde_json::{self, Value as JsonValue};
 
-use crate::error::WipError;
-use crate::options::WipOptions;
-use crate::parsing;
-use crate::value::{Struct, Value};
+use crate::{
+    error::WipError,
+    options::ParseOptions,
+    parsing,
+    value::{Struct, Value},
+};
 
-pub fn parse_source(source: &str, options: &WipOptions) -> Result<Value, WipError> {
+pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, WipError> {
     let raw_value: JsonValue =
         serde_json::from_str(source).map_err(|err| WipError(err.to_string()))?;
     parse_value(raw_value, options)
 }
 
-pub fn parse_value(raw_value: JsonValue, options: &WipOptions) -> Result<Value, WipError> {
+pub fn parse_value(raw_value: JsonValue, options: &ParseOptions) -> Result<Value, WipError> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
@@ -19,7 +21,7 @@ pub fn parse_value(raw_value: JsonValue, options: &WipOptions) -> Result<Value, 
 
 pub fn parse_value_non_unified(
     raw_value: JsonValue,
-    options: &WipOptions,
+    options: &ParseOptions,
 ) -> Result<Value, WipError> {
     Ok(match raw_value {
         JsonValue::Null => Value::Option(None),

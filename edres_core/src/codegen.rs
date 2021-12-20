@@ -3,20 +3,22 @@ use std::path::Path;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-use crate::error::WipError;
-use crate::options::{SerdeSupport, WipOptions};
-use crate::parsing;
-use crate::value::{Struct, Value};
-use crate::Format;
+use crate::{
+    error::WipError,
+    options::{Options, SerdeSupport},
+    parsing,
+    value::{Struct, Value},
+    Format,
+};
 
 pub fn define_structs(
     data: &Struct,
     struct_name: &str,
     source_file_path: Option<&Path>,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<TokenStream, WipError> {
     let derives = derive_attribute(
-        options.derived_traits.as_ref(),
+        options.structs.derived_traits.as_ref(),
         options.serde_support,
         false,
     );
@@ -33,8 +35,8 @@ pub fn define_structs(
             pub const #source_path_const_name: &'static str = #source_file_path;
         });
     }
-    if let Some(const_name) = &options.struct_data_const_name {
-        let struct_value = define_struct_value(data, options, struct_name)?;
+    if let Some(const_name) = &options.structs.struct_data_const_name {
+        let struct_value = define_struct_value(data, struct_name)?;
         let struct_name = format_ident!("{}", struct_name);
         let const_name = format_ident!("{}", const_name);
 
@@ -63,7 +65,7 @@ pub fn define_structs(
 fn define_structs_inner(
     data: &Struct,
     struct_name: &str,
-    options: &WipOptions,
+    options: &Options,
     derives: Option<&TokenStream>,
 ) -> Result<TokenStream, WipError> {
     let mut fields = vec![];
@@ -71,14 +73,7 @@ fn define_structs_inner(
 
     for (key, value) in data.0.iter() {
         let field_name = format_ident!("{}", key);
-        let decl = type_of_value(
-            value,
-            options,
-            struct_name,
-            Some(key),
-            None,
-            &mut sub_structs,
-        )?;
+        let decl = type_of_value(value, struct_name, Some(key), None, &mut sub_structs)?;
         fields.push(quote!(pub #field_name : #decl));
     }
 
@@ -106,11 +101,11 @@ fn define_structs_inner(
 fn define_structs_for_value(
     data: &Value,
     root_struct_name: &str,
-    options: &WipOptions,
+    options: &Options,
     dest: &mut Vec<TokenStream>,
 ) -> Result<(), WipError> {
     let derives = derive_attribute(
-        options.derived_traits.as_ref(),
+        options.structs.derived_traits.as_ref(),
         options.serde_support,
         false,
     );
@@ -154,7 +149,7 @@ fn define_enum_from_variants_and_values<'a, IK, IV, S>(
     use_values: bool,
     enum_name: &str,
     source_file_path: Option<&Path>,
-    options: &WipOptions,
+    options: &Options,
     mut inherents: Vec<TokenStream>,
 ) -> Result<TokenStream, WipError>
 where
@@ -164,9 +159,9 @@ where
     S: AsRef<str>,
 {
     let derives = derive_attribute(
-        options.derived_traits.as_ref(),
+        options.enums.derived_traits.as_ref(),
         options.serde_support,
-        options.impl_display,
+        options.enums.impl_display,
     )
     .into_iter();
     let enum_name = format_ident!("{}", enum_name);
@@ -183,7 +178,7 @@ where
             pub const #source_path_const_name: &'static str = #source_file_path;
         });
     }
-    if let Some(const_name) = &options.all_variants_const_name {
+    if let Some(const_name) = &options.enums.all_variants_const_name {
         let const_name = format_ident!("{}", const_name);
         let enum_variants = variants.clone().map(|s| format_ident!("{}", s.as_ref()));
         inherents.push(quote! {
@@ -192,25 +187,25 @@ where
             ];
         });
     }
-    let new_struct_tokens = match (use_values, &options.all_values_const_name) {
+    let new_struct_tokens = match (use_values, &options.enums.all_values_const_name) {
         (true, Some(const_name)) => {
             let const_name = format_ident!("{}", const_name);
 
             let struct_name = options
+                .enums
                 .values_struct_name
                 .as_ref()
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| format!("{}__Value", enum_name));
-            let value_options = options
-                .values_struct_options
-                .as_ref()
-                .cloned()
-                .unwrap_or_else(|| Box::new(WipOptions::minimal()));
+            let value_options = Options {
+                structs: options.enums.values_struct_options.clone(),
+                ..options.clone()
+            };
             let (value_type, values, new_struct_tokens) =
                 establish_types_for_values(values.into_iter(), &struct_name, &value_options)?;
             let values = values
                 .iter()
-                .map(|value| define_value(value, &value_options, &struct_name, None, None))
+                .map(|value| define_value(value, &struct_name, None, None))
                 .collect::<Result<Vec<_>, _>>()?;
 
             inherents.push(quote! {
@@ -219,7 +214,7 @@ where
                 ];
             });
 
-            if let Some(get_value_fn_name) = &options.get_value_fn_name {
+            if let Some(get_value_fn_name) = &options.enums.get_value_fn_name {
                 let get_value_fn_name = format_ident!("{}", get_value_fn_name);
                 inherents.push(quote! {
                     pub const fn #get_value_fn_name(self) -> &'static #value_type {
@@ -246,6 +241,7 @@ where
 
     // Manually implemented traits
     let default_tokens = options
+        .enums
         .impl_default
         .then(|| {
             let first_variant = format_ident!("{}", variants.clone().next().unwrap().as_ref());
@@ -260,6 +256,7 @@ where
         .into_iter();
 
     let display_tokens = options
+        .enums
         .impl_display
         .then(|| {
             quote! {
@@ -273,6 +270,7 @@ where
         .into_iter();
 
     let from_str_tokens = options
+        .enums
         .impl_from_str
         .then(|| {
             let enum_variants = variants.clone().map(|s| format_ident!("{}", s.as_ref()));
@@ -311,7 +309,7 @@ pub fn define_enum_from_keys(
     data: &Struct,
     enum_name: &str,
     source_file_path: Option<&Path>,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<TokenStream, WipError> {
     define_enum_from_variants_and_values(
         data.0.keys(),
@@ -327,17 +325,17 @@ pub fn define_enum_from_keys(
 pub fn define_structs_from_values(
     data: &Struct,
     struct_name: &str,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<TokenStream, WipError> {
     let (value_type, values, new_struct_tokens) =
         establish_types_for_values(data.0.values(), struct_name, options)?;
 
     let mut const_tokens = None;
-    if let Some(const_name) = &options.all_values_const_name {
+    if let Some(const_name) = &options.structs.struct_data_const_name {
         let const_name = format_ident!("{}", const_name);
         let values = values
             .iter()
-            .map(|value| define_value(value, options, struct_name, None, None))
+            .map(|value| define_value(value, struct_name, None, None))
             .collect::<Result<Vec<_>, _>>()?;
 
         const_tokens = Some(quote! {
@@ -362,7 +360,7 @@ pub fn define_structs_from_values(
 fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
     values: I,
     struct_name: &str,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<(TokenStream, Vec<Value>, Vec<TokenStream>), WipError> {
     let mut values = values.into_iter().map(Clone::clone).collect::<Vec<_>>();
     if values.is_empty() {
@@ -375,7 +373,7 @@ fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
     define_structs_for_value(first, struct_name, options, &mut new_structs)?;
 
     let mut unused = vec![];
-    let value_type = type_of_value(first, options, struct_name, None, None, &mut unused)?;
+    let value_type = type_of_value(first, struct_name, None, None, &mut unused)?;
 
     Ok((value_type, values, new_structs))
 }
@@ -385,7 +383,7 @@ fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
 pub fn define_enum_from_filenames(
     root: &Path,
     enum_name: &str,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<TokenStream, WipError> {
     use case::CaseExt;
     use ignore::WalkBuilder;
@@ -420,9 +418,10 @@ pub fn define_enum_from_filenames(
 
     let mut extra_inherents = vec![];
 
-    if let Some(const_name) = &options.file_paths_const_name {
+    if let Some(const_name) = &options.files.file_paths_const_name {
         let const_name = format_ident!("{}", const_name);
         let get_fn = options
+            .files
             .get_path_fn_name
             .as_ref()
             .map(|fn_name| {
@@ -441,9 +440,9 @@ pub fn define_enum_from_filenames(
             #(#get_fn)*
         });
     }
-    if let Some(const_name) = &options.file_bytes_const_name {
+    if let Some(const_name) = &options.files.file_bytes_const_name {
         let const_name = format_ident!("{}", const_name);
-        let get_fn = options.get_bytes_fn_name.as_ref().map(|fn_name| {
+        let get_fn = options.files.get_bytes_fn_name.as_ref().map(|fn_name| {
             let fn_name = format_ident!("{}", fn_name);
             quote! {
                 pub const fn #fn_name(self) -> &'static [u8] { Self::#const_name[self as usize] }
@@ -458,9 +457,10 @@ pub fn define_enum_from_filenames(
             #(#get_fn)*
         });
     }
-    if let Some(const_name) = &options.file_strings_const_name {
+    if let Some(const_name) = &options.files.file_strings_const_name {
         let const_name = format_ident!("{}", const_name);
         let get_fn = options
+            .files
             .get_string_fn_name
             .as_ref()
             .map(|fn_name| {
@@ -481,7 +481,7 @@ pub fn define_enum_from_filenames(
     }
 
     let mut values = vec![];
-    if options.all_values_const_name.is_some() {
+    if options.enums.all_values_const_name.is_some() {
         values = values_from_file_contents(root, None, options)?;
     }
 
@@ -501,7 +501,7 @@ pub fn define_enum_from_filenames(
 fn values_from_file_contents(
     root: &Path,
     format: Option<Format>,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<Vec<Value>, WipError> {
     use ignore::WalkBuilder;
 
@@ -517,7 +517,7 @@ fn values_from_file_contents(
             entry
                 .map_err(|e| WipError(e.to_string()))
                 .and_then(|entry| {
-                    parsing::parse_source_file_with_format(entry.path(), format, options)
+                    parsing::parse_source_file_with_format(entry.path(), format, &options.parse)
                 })
         })
         .collect::<Result<Vec<_>, _>>()
@@ -527,18 +527,18 @@ pub fn define_structs_from_file_contents(
     root: &Path,
     struct_name: &str,
     format: Option<Format>,
-    options: &WipOptions,
+    options: &Options,
 ) -> Result<TokenStream, WipError> {
     let values = values_from_file_contents(root, format, options)?;
     let (value_type, values, new_struct_tokens) =
         establish_types_for_values(values.iter(), struct_name, options)?;
 
     let mut const_tokens = None;
-    if let Some(const_name) = &options.all_values_const_name {
+    if let Some(const_name) = &options.structs.struct_data_const_name {
         let const_name = format_ident!("{}", const_name);
         let values = values
             .iter()
-            .map(|value| define_value(value, options, struct_name, None, None))
+            .map(|value| define_value(value, struct_name, None, None))
             .collect::<Result<Vec<_>, _>>()?;
 
         const_tokens = Some(quote! {
@@ -604,7 +604,6 @@ fn derive_attribute<S: AsRef<str>, I: IntoIterator<Item = S>>(
 
 fn type_of_value<'a>(
     value: &'a Value,
-    options: &WipOptions,
     struct_name: &str,
     under_key: Option<&str>,
     under_index: Option<usize>,
@@ -630,9 +629,7 @@ fn type_of_value<'a>(
         Value::F64(_) => quote!(f64),
         Value::String(_) => quote!(std::borrow::Cow<'static, str>),
         Value::Option(x) => match x {
-            Some(value) => {
-                type_of_value(value, options, struct_name, under_key, None, new_structs)?
-            }
+            Some(value) => type_of_value(value, struct_name, under_key, None, new_structs)?,
             None => quote!(Option<()>),
         },
         Value::Array(len, values) => {
@@ -640,14 +637,8 @@ fn type_of_value<'a>(
             match values.len() {
                 0 => quote!([(); #len]),
                 _ => {
-                    let inner_type = type_of_value(
-                        &values[0],
-                        options,
-                        struct_name,
-                        under_key,
-                        None,
-                        new_structs,
-                    )?;
+                    let inner_type =
+                        type_of_value(&values[0], struct_name, under_key, None, new_structs)?;
                     quote!([#inner_type; #len])
                 }
             }
@@ -655,14 +646,8 @@ fn type_of_value<'a>(
         Value::Vec(values) => match values.len() {
             0 => quote!(std::borrow::Cow<'static, [()]>),
             _ => {
-                let inner_type = type_of_value(
-                    &values[0],
-                    options,
-                    struct_name,
-                    under_key,
-                    None,
-                    new_structs,
-                )?;
+                let inner_type =
+                    type_of_value(&values[0], struct_name, under_key, None, new_structs)?;
                 quote!(std::borrow::Cow<'static, [#inner_type]>)
             }
         },
@@ -670,9 +655,7 @@ fn type_of_value<'a>(
             let types_in_tuple = values
                 .iter()
                 .enumerate()
-                .map(|(i, v)| {
-                    type_of_value(v, options, struct_name, under_key, Some(i), new_structs)
-                })
+                .map(|(i, v)| type_of_value(v, struct_name, under_key, Some(i), new_structs))
                 .collect::<Result<Vec<_>, WipError>>()?;
             quote!((#(#types_in_tuple),*))
         }
@@ -696,7 +679,6 @@ fn type_of_value<'a>(
 
 fn define_value(
     value: &Value,
-    options: &WipOptions,
     struct_name: &str,
     under_key: Option<&str>,
     under_index: Option<usize>,
@@ -722,7 +704,7 @@ fn define_value(
         Value::String(x) => quote!(std::borrow::Cow::Borrowed(#x)),
         Value::Option(x) => match x {
             Some(x) => {
-                let value = define_value(x, options, struct_name, under_key, under_index)?;
+                let value = define_value(x, struct_name, under_key, under_index)?;
                 quote!(Some(#value))
             }
             None => quote!(None),
@@ -730,14 +712,14 @@ fn define_value(
         Value::Array(_, values) => {
             let values = values
                 .iter()
-                .map(|value| define_value(value, options, struct_name, under_key, under_index))
+                .map(|value| define_value(value, struct_name, under_key, under_index))
                 .collect::<Result<Vec<_>, WipError>>()?;
             quote!([#(#values,)*])
         }
         Value::Vec(values) => {
             let values = values
                 .iter()
-                .map(|value| define_value(value, options, struct_name, under_key, under_index))
+                .map(|value| define_value(value, struct_name, under_key, under_index))
                 .collect::<Result<Vec<_>, WipError>>()?;
             quote!(std::borrow::Cow::Borrowed(&[#(#values,)*]))
         }
@@ -745,7 +727,7 @@ fn define_value(
             let values = values
                 .iter()
                 .enumerate()
-                .map(|(i, value)| define_value(value, options, struct_name, under_key, Some(i)))
+                .map(|(i, value)| define_value(value, struct_name, under_key, Some(i)))
                 .collect::<Result<Vec<_>, WipError>>()?;
             quote!((#(#values),*))
         }
@@ -759,20 +741,16 @@ fn define_value(
                 Some(i) => format!("__{}", i),
             };
             let name = format!("{}{}{}", struct_name, key, index);
-            define_struct_value(fields, options, &name)?
+            define_struct_value(fields, &name)?
         }
     })
 }
 
-fn define_struct_value(
-    data: &Struct,
-    options: &WipOptions,
-    struct_name: &str,
-) -> Result<TokenStream, WipError> {
+fn define_struct_value(data: &Struct, struct_name: &str) -> Result<TokenStream, WipError> {
     let mut fields = vec![];
 
     for (key, value) in data.0.iter() {
-        let value = define_value(value, options, struct_name, Some(key), None)?;
+        let value = define_value(value, struct_name, Some(key), None)?;
         let key = format_ident!("{}", key);
         fields.push(quote!(#key: #value,));
     }
@@ -788,6 +766,7 @@ fn define_struct_value(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::options::*;
     use pretty_assertions::assert_eq;
 
     fn assert_tokens(a: TokenStream, b: TokenStream) {
@@ -797,7 +776,6 @@ mod tests {
     #[test]
     fn type_declarations() {
         let whatever = &mut vec![];
-        let options = &WipOptions::default();
 
         fn some_struct() -> Value {
             Value::Struct(Struct([("key".into(), Value::Unit)].into_iter().collect()))
@@ -808,23 +786,23 @@ mod tests {
         let a_tuple = Value::Tuple(vec![some_struct(), some_struct()]);
 
         assert_tokens(
-            type_of_value(&Value::Unit, options, "unused", None, None, whatever).unwrap(),
+            type_of_value(&Value::Unit, "unused", None, None, whatever).unwrap(),
             quote!(()),
         );
         assert_tokens(
-            type_of_value(&Value::F32(1.), options, "unused", None, None, whatever).unwrap(),
+            type_of_value(&Value::F32(1.), "unused", None, None, whatever).unwrap(),
             quote!(f32),
         );
         assert_tokens(
-            type_of_value(&a_struct, options, "StructName", None, None, whatever).unwrap(),
+            type_of_value(&a_struct, "StructName", None, None, whatever).unwrap(),
             quote!(StructName),
         );
         assert_tokens(
-            type_of_value(&a_vec, options, "StructName", None, None, whatever).unwrap(),
+            type_of_value(&a_vec, "StructName", None, None, whatever).unwrap(),
             quote!(std::borrow::Cow<'static, [StructName]>),
         );
         assert_tokens(
-            type_of_value(&a_tuple, options, "StructName", None, None, whatever).unwrap(),
+            type_of_value(&a_tuple, "StructName", None, None, whatever).unwrap(),
             quote!((StructName__0, StructName__1)),
         );
         assert_tokens(
@@ -837,7 +815,6 @@ mod tests {
                     .into_iter()
                     .collect(),
                 )),
-                options,
                 "StructName",
                 None,
                 None,
@@ -851,7 +828,7 @@ mod tests {
     #[test]
     #[cfg(rustfmt_skip)]
     fn value_declarations() {
-        let options = &WipOptions::default();
+        let options = &Options::default();
 
         fn some_struct() -> Value {
             Value::Struct(Struct([("key".into(), Value::Unit)].into_iter().collect()))
@@ -909,7 +886,7 @@ mod tests {
     #[test]
     fn empty_struct() {
         let fields = Struct([].into_iter().collect());
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -926,9 +903,9 @@ mod tests {
             &fields,
             "Struct",
             Some("./path/to/file.toml".as_ref()),
-            &WipOptions {
+            &Options {
                 source_path_const_name: Some("SOURCE_PATH".into()),
-                ..WipOptions::minimal()
+                ..Options::minimal()
             },
         )
         .unwrap();
@@ -971,7 +948,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -1014,7 +991,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -1042,7 +1019,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -1068,7 +1045,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -1101,10 +1078,13 @@ mod tests {
             &fields,
             "Struct",
             None,
-            &WipOptions {
-                derived_traits: vec!["Debug".into(), "Clone".into()].into(),
+            &Options {
                 serde_support: SerdeSupport::Yes,
-                ..WipOptions::minimal()
+                structs: StructOptions {
+                    derived_traits: vec!["Debug".into(), "Clone".into()].into(),
+                    ..StructOptions::minimal()
+                },
+                ..Options::minimal()
             },
         )
         .unwrap();
@@ -1145,7 +1125,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -1189,7 +1169,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &WipOptions::minimal()).unwrap();
+        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
         assert_tokens(
             result,
             quote!(
@@ -1221,7 +1201,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_enum_from_keys(&mapping, "Enum", None, &WipOptions::minimal()).unwrap();
+        let result = define_enum_from_keys(&mapping, "Enum", None, &Options::minimal()).unwrap();
 
         assert_tokens(
             result,
@@ -1248,9 +1228,9 @@ mod tests {
             &mapping,
             "Enum",
             Some("./path/to/file.toml".as_ref()),
-            &WipOptions {
+            &Options {
                 source_path_const_name: Some("SOURCE_PATH".into()),
-                ..WipOptions::minimal()
+                ..Options::minimal()
             },
         )
         .unwrap();
@@ -1281,14 +1261,17 @@ mod tests {
             &mapping,
             "Enum",
             None,
-            &WipOptions {
-                derived_traits: vec!["Clone".into()].into(),
+            &Options {
                 serde_support: SerdeSupport::Yes,
-                all_variants_const_name: Some("VARIANTS".into()),
-                impl_default: true,
-                impl_display: true,
-                impl_from_str: true,
-                ..WipOptions::minimal()
+                enums: EnumOptions {
+                    derived_traits: vec!["Clone".into()].into(),
+                    all_variants_const_name: Some("VARIANTS".into()),
+                    impl_default: true,
+                    impl_display: true,
+                    impl_from_str: true,
+                    ..EnumOptions::minimal()
+                },
+                ..Options::minimal()
             },
         )
         .unwrap();
@@ -1347,14 +1330,17 @@ mod tests {
             &mapping,
             "Enum",
             None,
-            &WipOptions {
-                derived_traits: vec!["Clone".into()].into(),
+            &Options {
                 serde_support: SerdeSupport::Yes,
-                all_variants_const_name: Some("VARIANTS".into()),
-                impl_default: true,
-                impl_display: true,
-                impl_from_str: true,
-                ..WipOptions::default()
+                enums: EnumOptions {
+                    derived_traits: vec!["Clone".into()].into(),
+                    all_variants_const_name: Some("VARIANTS".into()),
+                    impl_default: true,
+                    impl_display: true,
+                    impl_from_str: true,
+                    ..Default::default()
+                },
+                ..Options::default()
             },
         )
         .unwrap();
@@ -1397,6 +1383,7 @@ mod tests {
                 }
 
                 #[allow(non_camel_case_types)]
+                #[derive(Debug, serde::Serialize, serde::Deserialize)]
                 pub struct Enum__Value {
                     pub key: (),
                 }
@@ -1411,12 +1398,12 @@ mod tests {
                 .into_iter()
                 .collect(),
         );
-        let result = define_structs_from_values(&fields, "Struct", &WipOptions::default()).unwrap();
+        let result = define_structs_from_values(&fields, "Struct", &Options::default()).unwrap();
 
         assert_tokens(
             result,
             quote! {
-                pub const VALUES: &[()] = &[(), (),];
+                pub const DATA: &[()] = &[(), (),];
             },
         );
     }
@@ -1428,7 +1415,7 @@ mod tests {
                 .into_iter()
                 .collect(),
         );
-        let result = define_structs_from_values(&fields, "Struct", &WipOptions::minimal()).unwrap();
+        let result = define_structs_from_values(&fields, "Struct", &Options::minimal()).unwrap();
 
         assert_tokens(result, quote!());
     }
@@ -1453,7 +1440,7 @@ mod tests {
             .into_iter()
             .collect(),
         );
-        let result = define_structs_from_values(&fields, "Struct", &WipOptions::default()).unwrap();
+        let result = define_structs_from_values(&fields, "Struct", &Options::default()).unwrap();
 
         assert_tokens(
             result,
@@ -1464,7 +1451,7 @@ mod tests {
                     pub key: bool,
                 }
 
-                pub const VALUES: &[Struct] = &[
+                pub const DATA: &[Struct] = &[
                     Struct { key: true, },
                     Struct { key: false, },
                 ];

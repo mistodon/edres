@@ -12,12 +12,14 @@ pub mod yaml;
 
 use std::path::Path;
 
-use crate::error::WipError;
-use crate::format::Format;
-use crate::options::{FloatSize, IntSize, WipOptions};
-use crate::value::Value;
+use crate::{
+    error::WipError,
+    format::Format,
+    options::{FloatSize, IntSize, ParseOptions},
+    value::Value,
+};
 
-pub fn parse_source_file(file: &Path, options: &WipOptions) -> Result<Value, WipError> {
+pub fn parse_source_file(file: &Path, options: &ParseOptions) -> Result<Value, WipError> {
     let source = std::fs::read_to_string(file).map_err(|x| WipError(x.to_string()))?;
     let format = Format::from_filename(file).map_err(|x| WipError(x.to_string()))?;
     parse_source(&source, format, options)
@@ -26,7 +28,7 @@ pub fn parse_source_file(file: &Path, options: &WipOptions) -> Result<Value, Wip
 pub(crate) fn parse_source_file_with_format(
     file: &Path,
     format: Option<Format>,
-    options: &WipOptions,
+    options: &ParseOptions,
 ) -> Result<Value, WipError> {
     let source = std::fs::read_to_string(file).map_err(|x| WipError(x.to_string()))?;
     let format = match format {
@@ -36,7 +38,11 @@ pub(crate) fn parse_source_file_with_format(
     parse_source(&source, format, options)
 }
 
-pub fn parse_source(source: &str, format: Format, options: &WipOptions) -> Result<Value, WipError> {
+pub fn parse_source(
+    source: &str,
+    format: Format,
+    options: &ParseOptions,
+) -> Result<Value, WipError> {
     match format {
         #[cfg(feature = "json-parsing")]
         Format::Json => json::parse_source(source, options),
@@ -80,8 +86,8 @@ pub(crate) fn preferred_int(value: i128, preferred: IntSize) -> Value {
     }
 }
 
-pub(crate) fn array_or_vec(seq: Vec<Value>, max_array_size: usize) -> Value {
-    if seq.len() <= max_array_size {
+pub(crate) fn array_or_vec(seq: Vec<Value>, max_array_size: Option<usize>) -> Value {
+    if max_array_size.is_some() && seq.len() <= max_array_size.unwrap() {
         Value::Array(seq.len(), seq)
     } else {
         Value::Vec(seq)

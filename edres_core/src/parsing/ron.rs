@@ -13,17 +13,22 @@ use ron::{
     value::{Number, Value as RonValue},
 };
 
-use crate::error::WipError;
-use crate::options::WipOptions;
-use crate::parsing;
-use crate::value::{Struct, Value};
+use crate::{
+    error::WipError,
+    options::ParseOptions,
+    parsing,
+    value::{Struct, Value},
+};
 
-pub fn parse_source(source: &str, options: &WipOptions) -> Result<Value, WipError> {
+pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, WipError> {
     let raw_value: RonValue = ron::de::from_str(source).map_err(|err| WipError(err.to_string()))?;
     parse_value_non_unified(raw_value, options)
 }
 
-pub fn parse_value(raw_value: ron::value::Value, options: &WipOptions) -> Result<Value, WipError> {
+pub fn parse_value(
+    raw_value: ron::value::Value,
+    options: &ParseOptions,
+) -> Result<Value, WipError> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
@@ -31,7 +36,7 @@ pub fn parse_value(raw_value: ron::value::Value, options: &WipOptions) -> Result
 
 pub fn parse_value_non_unified(
     raw_value: ron::value::Value,
-    options: &WipOptions,
+    options: &ParseOptions,
 ) -> Result<Value, WipError> {
     Ok(match raw_value {
         RonValue::Unit => Value::Unit,

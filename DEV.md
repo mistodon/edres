@@ -30,7 +30,7 @@ It's a pipeline!
     - TokenStream -> string
     - TokenStream -> file
 
-- [ ] Fix up (and refactor) Option types
+- [x] Fix up (and refactor) Option types
 - [ ] Fix up and refactor Error types
 - [ ] Load fns?
 - [ ] Validation?

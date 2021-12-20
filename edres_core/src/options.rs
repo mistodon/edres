@@ -1,22 +1,173 @@
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct WipOptions {
+pub struct Options {
+    pub source_path_const_name: Option<Cow<'static, str>>,
+    pub serde_support: SerdeSupport,
+
+    pub parse: ParseOptions,
+    pub structs: StructOptions,
+    pub enums: EnumOptions,
+    pub files: FilesOptions,
+    pub output: OutputOptions,
+}
+
+impl Options {
+    pub const fn new() -> Options {
+        Options {
+            source_path_const_name: Some(Cow::Borrowed("SOURCE_PATH")),
+            serde_support: SerdeSupport::No,
+
+            parse: ParseOptions::new(),
+            structs: StructOptions::new(),
+            enums: EnumOptions::new(),
+            files: FilesOptions::new(),
+            output: OutputOptions::new(),
+        }
+    }
+
+    pub const fn serde_default() -> Options {
+        Options {
+            source_path_const_name: Some(Cow::Borrowed("SOURCE_PATH")),
+            serde_support: SerdeSupport::Yes,
+
+            parse: ParseOptions::new(),
+            structs: StructOptions::new(),
+            enums: EnumOptions::new(),
+            files: FilesOptions::new(),
+            output: OutputOptions::new(),
+        }
+    }
+
+    pub const fn minimal() -> Options {
+        Options {
+            source_path_const_name: None,
+            serde_support: SerdeSupport::No,
+
+            parse: ParseOptions::new(),
+            structs: StructOptions::minimal(),
+            enums: EnumOptions::minimal(),
+            files: FilesOptions::minimal(),
+            output: OutputOptions::new(),
+        }
+    }
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseOptions {
     pub default_float_size: FloatSize,
     pub default_int_size: IntSize,
-    pub max_array_size: usize,
+    pub max_array_size: Option<usize>,
+}
+
+impl ParseOptions {
+    pub const fn new() -> Self {
+        ParseOptions {
+            default_float_size: FloatSize::F64,
+            default_int_size: IntSize::I64,
+            max_array_size: None,
+        }
+    }
+}
+
+impl Default for ParseOptions {
+    fn default() -> Self {
+        ParseOptions::new()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StructOptions {
     pub derived_traits: Cow<'static, [Cow<'static, str>]>,
-    pub serde_support: SerdeSupport,
+    pub struct_data_const_name: Option<Cow<'static, str>>,
+}
+
+impl StructOptions {
+    pub const fn new() -> StructOptions {
+        StructOptions {
+            derived_traits: Cow::Borrowed(&[Cow::Borrowed("Debug")]),
+            struct_data_const_name: Some(Cow::Borrowed("DATA")),
+        }
+    }
+
+    pub const fn minimal() -> StructOptions {
+        StructOptions {
+            derived_traits: Cow::Borrowed(&[]),
+            struct_data_const_name: None,
+        }
+    }
+}
+
+impl Default for StructOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnumOptions {
+    pub derived_traits: Cow<'static, [Cow<'static, str>]>,
     pub impl_default: bool,
     pub impl_display: bool,
     pub impl_from_str: bool,
-    pub source_path_const_name: Option<Cow<'static, str>>,
-    pub struct_data_const_name: Option<Cow<'static, str>>,
     pub all_variants_const_name: Option<Cow<'static, str>>,
     pub all_values_const_name: Option<Cow<'static, str>>,
     pub values_struct_name: Option<Cow<'static, str>>,
+    pub values_struct_options: StructOptions,
     pub get_value_fn_name: Option<Cow<'static, str>>,
-    pub values_struct_options: Option<Box<WipOptions>>, // TODO: No boxes, better defaults!
+}
+
+impl EnumOptions {
+    pub const fn new() -> EnumOptions {
+        EnumOptions {
+            derived_traits: Cow::Borrowed(&[
+                Cow::Borrowed("Debug"),
+                Cow::Borrowed("Clone"),
+                Cow::Borrowed("Copy"),
+                Cow::Borrowed("PartialEq"),
+                Cow::Borrowed("Eq"),
+                Cow::Borrowed("Hash"),
+            ]),
+            impl_default: true,
+            impl_display: true,
+            impl_from_str: true,
+            all_variants_const_name: Some(Cow::Borrowed("ALL")),
+            all_values_const_name: Some(Cow::Borrowed("VALUES")),
+            values_struct_name: None,
+            values_struct_options: StructOptions::new(),
+            get_value_fn_name: Some(Cow::Borrowed("get")),
+        }
+    }
+
+    pub const fn minimal() -> EnumOptions {
+        EnumOptions {
+            derived_traits: Cow::Borrowed(&[]),
+            impl_default: false,
+            impl_display: false,
+            impl_from_str: false,
+            all_variants_const_name: None,
+            all_values_const_name: None,
+            values_struct_name: None,
+            values_struct_options: StructOptions::minimal(),
+            get_value_fn_name: None,
+        }
+    }
+}
+
+impl Default for EnumOptions {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FilesOptions {
     pub file_paths_const_name: Option<Cow<'static, str>>,
     pub get_path_fn_name: Option<Cow<'static, str>>,
     pub file_strings_const_name: Option<Cow<'static, str>>,
@@ -25,24 +176,9 @@ pub struct WipOptions {
     pub get_bytes_fn_name: Option<Cow<'static, str>>,
 }
 
-impl WipOptions {
-    pub const fn new() -> Self {
-        WipOptions {
-            default_float_size: FloatSize::F64,
-            default_int_size: IntSize::I64,
-            max_array_size: 0,
-            derived_traits: Cow::Borrowed(&[Cow::Borrowed("Debug")]),
-            serde_support: SerdeSupport::No,
-            impl_default: false,
-            impl_display: false,
-            impl_from_str: false,
-            source_path_const_name: Some(Cow::Borrowed("SOURCE_PATH")),
-            struct_data_const_name: Some(Cow::Borrowed("DATA")),
-            all_variants_const_name: Some(Cow::Borrowed("ALL")),
-            all_values_const_name: Some(Cow::Borrowed("VALUES")),
-            values_struct_name: None,
-            get_value_fn_name: Some(Cow::Borrowed("get")),
-            values_struct_options: None,
+impl FilesOptions {
+    pub const fn new() -> FilesOptions {
+        FilesOptions {
             file_paths_const_name: Some(Cow::Borrowed("FILE_PATHS")),
             get_path_fn_name: Some(Cow::Borrowed("path")),
             file_strings_const_name: None,
@@ -52,23 +188,8 @@ impl WipOptions {
         }
     }
 
-    pub const fn minimal() -> Self {
-        WipOptions {
-            default_float_size: FloatSize::F64,
-            default_int_size: IntSize::I64,
-            max_array_size: 0,
-            derived_traits: Cow::Borrowed(&[]),
-            serde_support: SerdeSupport::No,
-            impl_default: false,
-            impl_display: false,
-            impl_from_str: false,
-            source_path_const_name: None,
-            struct_data_const_name: None,
-            all_variants_const_name: None,
-            all_values_const_name: None,
-            values_struct_name: None,
-            get_value_fn_name: None,
-            values_struct_options: None,
+    pub const fn minimal() -> FilesOptions {
+        FilesOptions {
             file_paths_const_name: None,
             get_path_fn_name: None,
             file_strings_const_name: None,
@@ -78,51 +199,21 @@ impl WipOptions {
         }
     }
 
-    pub const fn file_bytes() -> Self {
-        WipOptions {
-            default_float_size: FloatSize::F64,
-            default_int_size: IntSize::I64,
-            max_array_size: 0,
-            derived_traits: Cow::Borrowed(&[Cow::Borrowed("Debug")]),
-            serde_support: SerdeSupport::No,
-            impl_default: false,
-            impl_display: false,
-            impl_from_str: false,
-            source_path_const_name: Some(Cow::Borrowed("SOURCE_PATH")),
-            struct_data_const_name: Some(Cow::Borrowed("DATA")),
-            all_variants_const_name: Some(Cow::Borrowed("ALL")),
-            all_values_const_name: Some(Cow::Borrowed("VALUES")),
-            values_struct_name: None,
-            get_value_fn_name: Some(Cow::Borrowed("get")),
-            values_struct_options: None,
-            file_paths_const_name: Some(Cow::Borrowed("FILE_PATHS")),
-            get_path_fn_name: Some(Cow::Borrowed("path")),
-            file_bytes_const_name: Some(Cow::Borrowed("FILE_BYTES")),
-            get_bytes_fn_name: Some(Cow::Borrowed("bytes")),
+    pub const fn file_bytes() -> FilesOptions {
+        FilesOptions {
+            file_paths_const_name: None,
+            get_path_fn_name: None,
             file_strings_const_name: None,
             get_string_fn_name: None,
+            file_bytes_const_name: Some(Cow::Borrowed("FILE_BYTES")),
+            get_bytes_fn_name: Some(Cow::Borrowed("bytes")),
         }
     }
 
-    pub const fn file_strings() -> Self {
-        WipOptions {
-            default_float_size: FloatSize::F64,
-            default_int_size: IntSize::I64,
-            max_array_size: 0,
-            derived_traits: Cow::Borrowed(&[Cow::Borrowed("Debug")]),
-            serde_support: SerdeSupport::No,
-            impl_default: false,
-            impl_display: false,
-            impl_from_str: false,
-            source_path_const_name: Some(Cow::Borrowed("SOURCE_PATH")),
-            struct_data_const_name: Some(Cow::Borrowed("DATA")),
-            all_variants_const_name: Some(Cow::Borrowed("ALL")),
-            all_values_const_name: Some(Cow::Borrowed("VALUES")),
-            values_struct_name: None,
-            get_value_fn_name: Some(Cow::Borrowed("get")),
-            values_struct_options: None,
-            file_paths_const_name: Some(Cow::Borrowed("FILE_PATHS")),
-            get_path_fn_name: Some(Cow::Borrowed("path")),
+    pub const fn file_strings() -> FilesOptions {
+        FilesOptions {
+            file_paths_const_name: None,
+            get_path_fn_name: None,
             file_strings_const_name: Some(Cow::Borrowed("FILE_STRINGS")),
             get_string_fn_name: Some(Cow::Borrowed("string")),
             file_bytes_const_name: None,
@@ -131,7 +222,28 @@ impl WipOptions {
     }
 }
 
-impl Default for WipOptions {
+impl Default for FilesOptions {
+    fn default() -> Self {
+        FilesOptions::new()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OutputOptions {
+    pub create_dirs: bool,
+    pub write_only_if_changed: bool,
+}
+
+impl OutputOptions {
+    pub const fn new() -> Self {
+        OutputOptions {
+            create_dirs: true,
+            write_only_if_changed: true,
+        }
+    }
+}
+
+impl Default for OutputOptions {
     fn default() -> Self {
         Self::new()
     }

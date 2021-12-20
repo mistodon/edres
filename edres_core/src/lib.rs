@@ -17,5 +17,5 @@ compile_error!("The edres crate requires at least one parsing feature to be enab
 pub use crate::{
     error::{Error, GenerationError, OptionsError, WipError},
     format::Format,
-    options::{FloatSize, IntSize, SerdeSupport, WipOptions},
+    options::*,
 };
