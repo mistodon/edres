@@ -32,10 +32,11 @@ It's a pipeline!
 
 - [x] Fix up (and refactor) Option types
 - [x] Fix up and refactor Error types
-- [ ] Load fns?
+- [w] Load fns? (let's skip this for now...)
     - load_from_file(path)
     - load
     - fetch(bool)
+    - [ ] How best to implement these for enums etc.?
 - [ ] Validation?
 - [ ] Implement proc macro crate
     - define_structs
