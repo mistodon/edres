@@ -2,13 +2,13 @@ use indexmap::IndexMap;
 
 use crate::error::Error;
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Struct(pub(crate) IndexMap<String, Value>);
 
 pub type Map = Struct;
 
 /// A generic value.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Unit,
     Bool(bool),

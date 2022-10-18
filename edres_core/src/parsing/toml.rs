@@ -47,3 +47,54 @@ pub fn parse_value_non_unified(
         )),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn value_conversion() {
+        let toml_source = r#"
+            [root_table]
+            bool_field = true
+            int_field = 1000
+            float_field = 2.5
+            string_field = "hello"
+            datetime_field = 2022-12-22T22:22:22Z
+            array_field = [1, 2, 3]
+        "#;
+
+        let expected = Value::Struct(Struct(
+            [(
+                "root_table".into(),
+                Value::Struct(Struct(
+                    [
+                        ("bool_field".into(), Value::Bool(true)),
+                        ("int_field".into(), Value::I64(1000)),
+                        ("float_field".into(), Value::F64(2.5)),
+                        ("string_field".into(), Value::String("hello".into())),
+                        (
+                            "datetime_field".into(),
+                            Value::String("2022-12-22T22:22:22Z".into()),
+                        ),
+                        (
+                            "array_field".into(),
+                            Value::Vec(vec![Value::I64(1), Value::I64(2), Value::I64(3)]),
+                        ),
+                    ]
+                    .into_iter()
+                    .collect(),
+                )),
+            )]
+            .into_iter()
+            .collect(),
+        ));
+
+        let value: TomlValue = toml::from_str(toml_source).unwrap();
+        let value = parse_value_non_unified(value, &Default::default()).unwrap();
+
+        assert_eq!(value, expected);
+    }
+}

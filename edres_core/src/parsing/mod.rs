@@ -59,20 +59,28 @@ pub fn unify_values(_values: &mut [Value]) -> Result<(), Error> {
 }
 
 pub(crate) fn preferred_float(value: f64, preferred: FloatSize) -> Value {
+    use FloatSize::*;
     match preferred {
-        FloatSize::F32 => Value::F32(value as f32),
-        FloatSize::F64 => Value::F64(value),
+        F32 if value >= (f32::MIN as f64) && value <= (f32::MAX as f64) => Value::F32(value as f32),
+        _ => Value::F64(value),
     }
 }
 
-pub(crate) fn preferred_int(value: i128, preferred: IntSize) -> Value {
+pub(crate) const fn preferred_int(value: i128, preferred: IntSize) -> Value {
+    use IntSize::*;
     match preferred {
-        IntSize::I8 => Value::I8(value as i8),
-        IntSize::I16 => Value::I16(value as i16),
-        IntSize::I32 => Value::I32(value as i32),
-        IntSize::I64 => Value::I64(value as i64),
-        IntSize::I128 => Value::I128(value),
-        IntSize::ISize => Value::ISize(value as isize),
+        ISize => Value::ISize(value as isize),
+        I8 if value >= (i8::MIN as i128) && value <= (i8::MAX as i128) => Value::I8(value as i8),
+        I8 | I16 if value >= (i16::MIN as i128) && value <= (i16::MAX as i128) => {
+            Value::I16(value as i16)
+        }
+        I8 | I16 | I32 if value >= (i32::MIN as i128) && value <= (i32::MAX as i128) => {
+            Value::I32(value as i32)
+        }
+        I8 | I16 | I32 | I64 if value >= (i64::MIN as i128) && value <= (i64::MAX as i128) => {
+            Value::I64(value as i64)
+        }
+        _ => Value::I128(value),
     }
 }
 
@@ -81,5 +89,45 @@ pub(crate) fn array_or_vec(seq: Vec<Value>, max_array_size: Option<usize>) -> Va
         Value::Array(seq.len(), seq)
     } else {
         Value::Vec(seq)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn max_array_size() {
+        let u = Value::Unit;
+        assert_eq!(
+            array_or_vec(vec![u.clone(); 3], None),
+            Value::Vec(vec![u.clone(); 3])
+        );
+        assert_eq!(
+            array_or_vec(vec![u.clone(); 3], Some(3)),
+            Value::Array(3, vec![u.clone(); 3])
+        );
+        assert_eq!(
+            array_or_vec(vec![u.clone(); 4], Some(3)),
+            Value::Vec(vec![u.clone(); 4])
+        );
+    }
+
+    #[test]
+    fn correct_preferred_int() {
+        assert_eq!(preferred_int(-1, IntSize::I32), Value::I32(-1));
+        assert_eq!(preferred_int(1, IntSize::I64), Value::I64(1));
+        assert_eq!(preferred_int(129, IntSize::I8), Value::I16(129));
+        assert_eq!(preferred_int(65537, IntSize::I16), Value::I32(65537));
+    }
+
+    #[test]
+    fn correct_preferred_float() {
+        assert_eq!(preferred_float(2.5, FloatSize::F32), Value::F32(2.5));
+        assert_eq!(preferred_float(2.5, FloatSize::F64), Value::F64(2.5));
+        assert_eq!(
+            preferred_float((f32::MAX as f64) * 2.0, FloatSize::F32),
+            Value::F64((f32::MAX as f64) * 2.0)
+        );
     }
 }

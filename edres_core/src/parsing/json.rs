@@ -49,3 +49,54 @@ pub fn parse_value_non_unified(
         )),
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn value_conversion() {
+        let json_source = r#"{
+            "root_mapping": {
+                "null_field": null,
+                "bool_field": true,
+                "signed_field": -100,
+                "big_field": 18446744073709551615,
+                "float_field": 2.5,
+                "string_field": "hello",
+                "sequence": [1, 2, 3]
+            }
+        }"#;
+
+        let expected = Value::Struct(Struct(
+            [(
+                "root_mapping".into(),
+                Value::Struct(Struct(
+                    [
+                        ("null_field".into(), Value::Option(None)),
+                        ("bool_field".into(), Value::Bool(true)),
+                        ("signed_field".into(), Value::I64(-100)),
+                        ("big_field".into(), Value::I128(18446744073709551615)),
+                        ("float_field".into(), Value::F64(2.5)),
+                        ("string_field".into(), Value::String("hello".into())),
+                        (
+                            "sequence".into(),
+                            Value::Vec(vec![Value::I64(1), Value::I64(2), Value::I64(3)]),
+                        ),
+                    ]
+                    .into_iter()
+                    .collect(),
+                )),
+            )]
+            .into_iter()
+            .collect(),
+        ));
+
+        let value: JsonValue = serde_json::from_str(json_source).unwrap();
+        let value = parse_value_non_unified(value, &Default::default()).unwrap();
+
+        assert_eq!(value, expected);
+    }
+}
