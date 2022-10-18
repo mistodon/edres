@@ -76,6 +76,7 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
             writeln!(&mut buffer, "{}", source).unwrap();
         }
 
+        std::fs::create_dir_all("src/gen").unwrap();
         std::fs::write(format!("src/gen/{}.rs", dir), buffer).unwrap();
     }
 

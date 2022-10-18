@@ -6,3 +6,4 @@ cargo check
 cargo test
 cargo fmt -- --check
 cargo clippy -- -D clippy::all
+cargo build
