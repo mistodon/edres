@@ -2,15 +2,15 @@ pub mod gen;
 
 #[cfg(test)]
 mod de {
-    pub fn json<'a, T: serde::Deserialize<'a>>(source: &'a str) -> T {
+    pub fn json<T: for<'de> serde::Deserialize<'de>>(source: &str) -> T {
         serde_json::from_str(source).unwrap()
     }
 
-    pub fn toml<'a, T: serde::Deserialize<'a>>(source: &'a str) -> T {
-        toml::de::from_str(source).unwrap()
+    pub fn toml<T: for<'de> serde::Deserialize<'de>>(source: &str) -> T {
+        toml::from_str(source).unwrap()
     }
 
-    pub fn yaml<'a, T: for<'de> serde::Deserialize<'de>>(source: &'a str) -> T {
+    pub fn yaml<T: for<'de> serde::Deserialize<'de>>(source: &str) -> T {
         serde_yaml::from_str(source).unwrap()
     }
 }

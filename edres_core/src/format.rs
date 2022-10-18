@@ -11,8 +11,6 @@ use crate::error::*;
 pub enum Format {
     #[cfg(feature = "json-parsing")]
     Json,
-    #[cfg(feature = "ron-parsing")]
-    Ron,
     #[cfg(feature = "toml-parsing")]
     Toml,
     #[cfg(feature = "yaml-parsing")]
@@ -25,9 +23,6 @@ impl Format {
             Some(ext) => match ext.to_string_lossy().as_ref() {
                 #[cfg(feature = "json-parsing")]
                 "json" => Ok(Format::Json),
-
-                #[cfg(feature = "ron-parsing")]
-                "ron" => Ok(Format::Ron),
 
                 #[cfg(feature = "toml-parsing")]
                 "toml" => Ok(Format::Toml),

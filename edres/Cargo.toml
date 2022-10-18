@@ -1,0 +1,29 @@
+[package]
+name = "edres"
+version = "0.6.0"
+authors = ["Vi <violet@hey.com>"]
+edition = "2021"
+description = "Generate struct and enum definitions from data files."
+homepage = "https://github.com/mistodon/edres"
+repository = "https://github.com/mistodon/edres"
+readme = "README.md"
+keywords = ["build", "config", "parsing", "generator"]
+categories = ["config", "parsing"]
+license = "CC0-1.0"
+
+[badges]
+travis-ci = { repository = "mistodon/edres", branch = "master" }
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["toml-parsing"]
+json-parsing = ["edres_core/json-parsing", "edres_macros/json-parsing"]
+toml-parsing = ["edres_core/toml-parsing", "edres_macros/toml-parsing"]
+yaml-parsing = ["edres_core/yaml-parsing", "edres_macros/yaml-parsing"]
+proc-macros = ["edres_macros"]
+
+[dependencies]
+edres_core = { version = "=0.6.0", path = "../edres_core" }
+edres_macros = { version = "=0.6.0", path = "../edres_macros", optional = true }

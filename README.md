@@ -5,7 +5,7 @@ This is a library for converting config files into matching source files at buil
 
 [![Build Status](https://travis-ci.org/mistodon/edres.svg?branch=master)](https://travis-ci.org/mistodon/edres)
 [![Crates.io](https://img.shields.io/crates/v/edres.svg)](https://crates.io/crates/edres)
-[![Docs.rs](https://docs.rs/edres/badge.svg)](https://docs.rs/edres/0.5.0/edres/)
+[![Docs.rs](https://docs.rs/edres/badge.svg)](https://docs.rs/edres/0.6.0/edres/)
 
 ## Usage
 
@@ -13,16 +13,15 @@ This library is intended to be used in a `build.rs` file, so it needs to be adde
 
 ```toml
 [build-dependencies.edres]
-version = "~0.4.0"
+version = "0.6"
 features = ["toml-parsing"]
 ```
 
 By default, `edres` is markup-language-agnostic, so include the relevant feature for whatever language your config file is written in. Choices are:
 
 1.  `json-parsing`
-2.  `ron-parsing`
-3.  `toml-parsing`
-4.  `yaml-parsing`
+2.  `toml-parsing`
+3.  `yaml-parsing`
 
 ### Build-time
 

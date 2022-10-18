@@ -48,5 +48,6 @@ pub fn parse_value_non_unified(
                 })
                 .collect::<Result<_, Error>>()?,
         )),
+        YamlValue::Tagged(tagged_value) => parse_value_non_unified(tagged_value.value, options)?,
     })
 }

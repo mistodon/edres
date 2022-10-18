@@ -23,7 +23,7 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let source = codegen::define_structs(&value, "Struct", Some(path.as_ref()), &options)?;
-            writeln!(&mut buffer, "{}", source.to_string())?;
+            writeln!(&mut buffer, "{}", source)?;
         }
 
         // define_enum_from_keys
@@ -36,7 +36,7 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
 
             let source =
                 codegen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options)?;
-            writeln!(&mut buffer, "{}", source.to_string())?;
+            writeln!(&mut buffer, "{}", source)?;
         }
 
         // define_structs_from_values
@@ -48,14 +48,14 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let source = codegen::define_structs_from_values(&value, "VStruct", &options)?;
-            writeln!(&mut buffer, "{}", source.to_string())?;
+            writeln!(&mut buffer, "{}", source)?;
         }
 
         // define_enum_from_filenames
         {
             let path = format!("data/{}/files", dir);
             let source = codegen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options)?;
-            writeln!(&mut buffer, "{}", source.to_string())?;
+            writeln!(&mut buffer, "{}", source)?;
         }
 
         // define_structs_from_file_contents
@@ -73,7 +73,7 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                     ..options.clone()
                 },
             )?;
-            writeln!(&mut buffer, "{}", source.to_string())?;
+            writeln!(&mut buffer, "{}", source)?;
         }
 
         std::fs::write(format!("src/gen/{}.rs", dir), buffer)?;

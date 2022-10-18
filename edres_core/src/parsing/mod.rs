@@ -1,9 +1,6 @@
 #[cfg(feature = "json-parsing")]
 pub mod json;
 
-#[cfg(feature = "ron-parsing")]
-pub mod ron;
-
 #[cfg(feature = "toml-parsing")]
 pub mod toml;
 
@@ -42,9 +39,6 @@ pub fn parse_source(source: &str, format: Format, options: &ParseOptions) -> Res
     match format {
         #[cfg(feature = "json-parsing")]
         Format::Json => json::parse_source(source, options),
-
-        #[cfg(feature = "ron-parsing")]
-        Format::Ron => ron::parse_source(source, options),
 
         #[cfg(feature = "toml-parsing")]
         Format::Toml => toml::parse_source(source, options),
