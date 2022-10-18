@@ -3,7 +3,4 @@
 set -eux
 set -o pipefail
 
-cargo check
-cargo test
-cargo fmt -- --check
-cargo clippy -- -D clippy::all
+sh scripts/citest
