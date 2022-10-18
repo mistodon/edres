@@ -619,7 +619,10 @@ fn type_of_value<'a>(
         Value::F64(_) => quote!(f64),
         Value::String(_) => quote!(std::borrow::Cow<'static, str>),
         Value::Option(x) => match x {
-            Some(value) => type_of_value(value, struct_name, under_key, None, new_structs)?,
+            Some(value) => {
+                let inner_type = type_of_value(value, struct_name, under_key, None, new_structs)?;
+                quote!(Option<#inner_type>)
+            }
             None => quote!(Option<()>),
         },
         Value::Array(len, values) => {
@@ -913,7 +916,7 @@ mod tests {
     }
 
     #[test]
-    fn big_flat_struct() {
+    fn big_struct() {
         let fields = Struct(
             [
                 ("a".into(), Value::Unit),
@@ -934,11 +937,27 @@ mod tests {
                 ("p".into(), Value::F32(32.)),
                 ("q".into(), Value::F64(64.)),
                 ("r".into(), Value::String("String".into())),
+                ("s".into(), Value::Option(Some(Box::new(Value::Unit)))),
+                ("t".into(), Value::Tuple(vec![Value::Unit; 2])),
+                ("u".into(), Value::Array(2, vec![Value::Unit; 2])),
+                ("v".into(), Value::Vec(vec![Value::Unit; 2])),
             ]
             .into_iter()
             .collect(),
         );
-        let result = define_structs(&fields, "Struct", None, &Options::minimal()).unwrap();
+        let result = define_structs(
+            &fields,
+            "Struct",
+            None,
+            &Options {
+                structs: StructOptions {
+                    struct_data_const_name: Some("THINGY".into()),
+                    ..StructOptions::minimal()
+                },
+                ..Options::minimal()
+            },
+        )
+        .unwrap();
         assert_tokens(
             result,
             quote!(
@@ -962,6 +981,37 @@ mod tests {
                     pub p: f32,
                     pub q: f64,
                     pub r: std::borrow::Cow<'static, str>,
+                    pub s: Option<()>,
+                    pub t: ((), ()),
+                    pub u: [(); 2usize],
+                    pub v: std::borrow::Cow<'static, [()]>,
+                }
+
+                impl Struct {
+                    pub const THINGY: Struct = Struct {
+                        a: (),
+                        b: true,
+                        c: 'a',
+                        d: 8i8,
+                        e: 16i16,
+                        f: 32i32,
+                        g: 64i64,
+                        h: 128i128,
+                        i: 64isize,
+                        j: 8u8,
+                        k: 16u16,
+                        l: 32u32,
+                        m: 64u64,
+                        n: 128u128,
+                        o: 64usize,
+                        p: 32f32,
+                        q: 64f64,
+                        r: std::borrow::Cow::Borrowed("String"),
+                        s: Some(()),
+                        t: ((), ()),
+                        u: [(), (),],
+                        v: std::borrow::Cow::Borrowed(&[(), (),]),
+                    };
                 }
             ),
         );
@@ -1444,6 +1494,57 @@ mod tests {
                 pub const DATA: &[Struct] = &[
                     Struct { key: true, },
                     Struct { key: false, },
+                ];
+            },
+        );
+    }
+
+    #[test]
+    fn define_structs_from_complex_map_values() {
+        let fields = Struct(
+            [(
+                "Key1".into(),
+                Value::Struct(Struct(
+                    [
+                        ("none".into(), Value::Option(None)),
+                        ("some".into(), Value::Option(Some(Box::new(Value::U8(8))))),
+                        (
+                            "tuple".into(),
+                            Value::Tuple(vec![Value::I8(1), Value::F32(2.0)]),
+                        ),
+                        ("array".into(), Value::Array(2, vec![Value::I8(1); 2])),
+                        ("vec".into(), Value::Vec(vec![Value::I8(1); 2])),
+                    ]
+                    .into_iter()
+                    .collect(),
+                )),
+            )]
+            .into_iter()
+            .collect(),
+        );
+        let result = define_structs_from_values(&fields, "Struct", &Options::default()).unwrap();
+
+        assert_tokens(
+            result,
+            quote! {
+                #[allow(non_camel_case_types)]
+                #[derive(Debug)]
+                pub struct Struct {
+                    pub none: Option<()>,
+                    pub some: Option<u8>,
+                    pub tuple: (i8, f32),
+                    pub array: [i8; 2usize],
+                    pub vec: std::borrow::Cow<'static, [i8]>,
+                }
+
+                pub const DATA: &[Struct] = &[
+                    Struct {
+                        none: None,
+                        some: Some(8u8),
+                        tuple: (1i8, 2f32),
+                        array: [1i8, 1i8,],
+                        vec: std::borrow::Cow::Borrowed(&[1i8, 1i8,]),
+                    },
                 ];
             },
         );
