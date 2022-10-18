@@ -5,7 +5,6 @@ fn main() {
 }
 
 fn build() -> Result<(), Box<dyn std::error::Error>> {
-    panic!("{}", std::env::current_dir()?.display());
     let dirs = ["json", "toml", "yaml"];
 
     let options = Options::serde_default();
@@ -18,45 +17,45 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
         // define_structs
         {
             let path = format!("data/{}/struct.{}", dir, dir);
-            let value = match parsing::parse_source_file(path.as_ref(), &options.parse)? {
+            let value = match parsing::parse_source_file(path.as_ref(), &options.parse).unwrap() {
                 Value::Struct(s) => s,
                 _ => panic!("Not a struct!"),
             };
 
-            let source = codegen::define_structs(&value, "Struct", Some(path.as_ref()), &options)?;
-            writeln!(&mut buffer, "{}", source)?;
+            let source = codegen::define_structs(&value, "Struct", Some(path.as_ref()), &options).unwrap();
+            writeln!(&mut buffer, "{}", source).unwrap();
         }
 
         // define_enum_from_keys
         {
             let path = format!("data/{}/map.{}", dir, dir);
-            let value = match parsing::parse_source_file(path.as_ref(), &options.parse)? {
+            let value = match parsing::parse_source_file(path.as_ref(), &options.parse).unwrap() {
                 Value::Struct(s) => s,
                 _ => panic!("Not a struct!"),
             };
 
             let source =
-                codegen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options)?;
-            writeln!(&mut buffer, "{}", source)?;
+                codegen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options).unwrap();
+            writeln!(&mut buffer, "{}", source).unwrap();
         }
 
         // define_structs_from_values
         {
             let path = format!("data/{}/map.{}", dir, dir);
-            let value = match parsing::parse_source_file(path.as_ref(), &options.parse)? {
+            let value = match parsing::parse_source_file(path.as_ref(), &options.parse).unwrap() {
                 Value::Struct(s) => s,
                 _ => panic!("Not a struct!"),
             };
 
-            let source = codegen::define_structs_from_values(&value, "VStruct", &options)?;
-            writeln!(&mut buffer, "{}", source)?;
+            let source = codegen::define_structs_from_values(&value, "VStruct", &options).unwrap();
+            writeln!(&mut buffer, "{}", source).unwrap();
         }
 
         // define_enum_from_filenames
         {
             let path = format!("data/{}/files", dir);
-            let source = codegen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options)?;
-            writeln!(&mut buffer, "{}", source)?;
+            let source = codegen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options).unwrap();
+            writeln!(&mut buffer, "{}", source).unwrap();
         }
 
         // define_structs_from_file_contents
@@ -73,11 +72,11 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                     },
                     ..options.clone()
                 },
-            )?;
-            writeln!(&mut buffer, "{}", source)?;
+            ).unwrap();
+            writeln!(&mut buffer, "{}", source).unwrap();
         }
 
-        std::fs::write(format!("src/gen/{}.rs", dir), buffer)?;
+        std::fs::write(format!("src/gen/{}.rs", dir), buffer).unwrap();
     }
 
     Ok(())

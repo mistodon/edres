@@ -2,8 +2,7 @@
 
 set -eux
 
-pwd
-RUST_BACKTRACE=1 cargo check
+cargo check
 cargo test
 cargo fmt -- --check
 cargo clippy -- -D clippy::all
