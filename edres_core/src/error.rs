@@ -30,10 +30,6 @@ pub enum Error {
     #[error("JSON error")]
     Json(#[from] serde_json::Error),
 
-    #[cfg(feature = "ron-parsing")]
-    #[error("RON error")]
-    Ron(#[from] ron::Error),
-
     #[cfg(feature = "toml-parsing")]
     #[error("TOML error")]
     Toml(#[from] toml::de::Error),
