@@ -22,7 +22,8 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                 _ => panic!("Not a struct!"),
             };
 
-            let source = codegen::define_structs(&value, "Struct", Some(path.as_ref()), &options).unwrap();
+            let source =
+                codegen::define_structs(&value, "Struct", Some(path.as_ref()), &options).unwrap();
             writeln!(&mut buffer, "{}", source).unwrap();
         }
 
@@ -35,7 +36,8 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
             };
 
             let source =
-                codegen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options).unwrap();
+                codegen::define_enum_from_keys(&value, "Enum", Some(path.as_ref()), &options)
+                    .unwrap();
             writeln!(&mut buffer, "{}", source).unwrap();
         }
 
@@ -54,7 +56,8 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
         // define_enum_from_filenames
         {
             let path = format!("data/{}/files", dir);
-            let source = codegen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options).unwrap();
+            let source =
+                codegen::define_enum_from_filenames(path.as_ref(), "FileEnum", &options).unwrap();
             writeln!(&mut buffer, "{}", source).unwrap();
         }
 
@@ -72,7 +75,8 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
                     },
                     ..options.clone()
                 },
-            ).unwrap();
+            )
+            .unwrap();
             writeln!(&mut buffer, "{}", source).unwrap();
         }
 
