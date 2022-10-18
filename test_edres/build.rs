@@ -5,6 +5,7 @@ fn main() {
 }
 
 fn build() -> Result<(), Box<dyn std::error::Error>> {
+    panic!("{}", std::env::current_dir()?.display());
     let dirs = ["json", "toml", "yaml"];
 
     let options = Options::serde_default();

@@ -2,6 +2,7 @@
 
 set -eux
 
+pwd
 RUST_BACKTRACE=1 cargo check
 cargo test
 cargo fmt -- --check
