@@ -5,9 +5,10 @@ If `serde` turns your structs into markup files,
 
 then `edres` turns your markup files into structs.
 
-[![Rust](https://github.com/mistodon/edres/actions/workflows/rust.yml/badge.svg?branch=v0.6.0)](https://github.com/mistodon/edres/actions/workflows/rust.yml)
-[![Crates.io](https://img.shields.io/crates/v/edres.svg)](https://crates.io/crates/edres)
+[![CI](https://github.com/mistodon/edres/actions/workflows/rust.yml/badge.svg?branch=v0.6.0)](https://github.com/mistodon/edres/actions/workflows/rust.yml)
 [![Docs.rs](https://docs.rs/edres/badge.svg)](https://docs.rs/edres/0.6.0/edres/)
+[![Crates.io](https://img.shields.io/crates/v/edres.svg)](https://crates.io/crates/edres)
+[![codecov](https://codecov.io/github/mistodon/edres/branch/v0.6.0/graph/badge.svg?token=XN5QQCKX5Z)](https://codecov.io/github/mistodon/edres)
 
 ## Usage
 
