@@ -1,10 +1,10 @@
-#[cfg(feature = "json-parsing")]
+#[cfg(feature = "json")]
 pub mod json;
 
-#[cfg(feature = "toml-parsing")]
+#[cfg(feature = "toml")]
 pub mod toml;
 
-#[cfg(feature = "yaml-parsing")]
+#[cfg(feature = "yaml")]
 pub mod yaml;
 
 use std::path::Path;
@@ -37,13 +37,13 @@ pub(crate) fn parse_source_file_with_format(
 
 pub fn parse_source(source: &str, format: Format, options: &ParseOptions) -> Result<Value, Error> {
     match format {
-        #[cfg(feature = "json-parsing")]
+        #[cfg(feature = "json")]
         Format::Json => json::parse_source(source, options),
 
-        #[cfg(feature = "toml-parsing")]
+        #[cfg(feature = "toml")]
         Format::Toml => toml::parse_source(source, options),
 
-        #[cfg(feature = "yaml-parsing")]
+        #[cfg(feature = "yaml")]
         Format::Yaml => yaml::parse_source(source, options),
     }
 }

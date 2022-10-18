@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-set -eu
-set -o pipefail
-
-(cd edres_core && cargo watch -x "test --all-features")

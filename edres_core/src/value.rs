@@ -5,6 +5,8 @@ use crate::error::Error;
 #[derive(Debug, Default, Clone)]
 pub struct Struct(pub(crate) IndexMap<String, Value>);
 
+pub type Map = Struct;
+
 /// A generic value.
 #[derive(Debug, Clone)]
 pub enum Value {

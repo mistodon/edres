@@ -5,9 +5,9 @@ edition = "2021"
 
 [features]
 default = []
-json-parsing = ["serde_json"]
-toml-parsing = ["toml"]
-yaml-parsing = ["serde_yaml"]
+json = ["dep:serde_json"]
+toml = ["dep:toml"]
+yaml = ["dep:serde_yaml"]
 
 [dependencies]
 case = "1.0"

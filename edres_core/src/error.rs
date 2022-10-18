@@ -26,15 +26,15 @@ pub enum Error {
     #[error("Unsupported file path `{0}`")]
     UnsupportedFilePath(String),
 
-    #[cfg(feature = "json-parsing")]
+    #[cfg(feature = "json")]
     #[error("JSON error")]
     Json(#[from] serde_json::Error),
 
-    #[cfg(feature = "toml-parsing")]
+    #[cfg(feature = "toml")]
     #[error("TOML error")]
     Toml(#[from] toml::de::Error),
 
-    #[cfg(feature = "yaml-parsing")]
+    #[cfg(feature = "yaml")]
     #[error("YAML error")]
     Yaml(#[from] serde_yaml::Error),
 

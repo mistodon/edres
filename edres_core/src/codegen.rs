@@ -7,7 +7,7 @@ use crate::{
     error::Error,
     options::{Options, SerdeSupport},
     parsing,
-    value::{Struct, Value},
+    value::{Map, Struct, Value},
     Format,
 };
 
@@ -306,7 +306,7 @@ where
 }
 
 pub fn define_enum_from_keys(
-    data: &Struct,
+    data: &Map,
     enum_name: &str,
     source_file_path: Option<&Path>,
     options: &Options,
@@ -323,7 +323,7 @@ pub fn define_enum_from_keys(
 }
 
 pub fn define_structs_from_values(
-    data: &Struct,
+    data: &Map,
     struct_name: &str,
     options: &Options,
 ) -> Result<TokenStream, Error> {

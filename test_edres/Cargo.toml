@@ -4,11 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-edres = { path = "../edres", features = ["json-parsing", "toml-parsing", "yaml-parsing", "proc-macros"] }
+edres = { path = "../edres", features = ["json", "toml", "yaml"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
 toml = "0.5"
 
 [build-dependencies]
-edres = { path = "../edres", features = ["json-parsing", "toml-parsing", "yaml-parsing"] }
+edres = { path = "../edres", features = ["json", "toml", "yaml"] }
