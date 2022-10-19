@@ -9,8 +9,24 @@ use crate::error::Error;
 pub struct Struct(pub(crate) IndexMap<String, Value>);
 
 impl Struct {
-    pub fn from_pairs<S: Into<String>>(pairs: impl IntoIterator<Item = (S, Value)>) -> Self {
-        Struct(pairs.into_iter().map(|(k, v)| (k.into(), v)).collect())
+    /// Convenience method for creating a `Struct` directly.
+    ///
+    /// # Examples
+    /// ```
+    /// # use edres_core::value::*;
+    /// Struct::from_pairs([
+    ///     ("struct_field", Value::String("struct value".into())),
+    ///     ("another_field", Value::I32(100)),
+    /// ]);
+    ///
+    /// // Equivalent to the following (JSON) markup:
+    /// // {
+    /// //   "struct_field": "struct value",
+    /// //   "another_field": 100
+    /// // }
+    /// ```
+    pub fn from_pairs<S: Into<String>, V: Into<Value>>(pairs: impl IntoIterator<Item = (S, V)>) -> Self {
+        Struct(pairs.into_iter().map(|(k, v)| (k.into(), v.into())).collect())
     }
 }
 
