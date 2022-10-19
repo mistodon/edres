@@ -1,3 +1,5 @@
+//! TODO
+
 use std::path::Path;
 
 use proc_macro2::TokenStream;
@@ -11,6 +13,7 @@ use crate::{
     Format,
 };
 
+/// TODO
 pub fn define_structs(
     data: &Struct,
     struct_name: &str,
@@ -305,6 +308,7 @@ where
     Ok(tokens)
 }
 
+/// TODO
 pub fn define_enum_from_keys(
     data: &Map,
     enum_name: &str,
@@ -322,6 +326,7 @@ pub fn define_enum_from_keys(
     )
 }
 
+/// TODO
 pub fn define_structs_from_values(
     data: &Map,
     struct_name: &str,
@@ -380,6 +385,7 @@ fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
 
 // TODO: Doesn't fail if dir doesn't exist :/
 // TODO: Should be from manifest root
+/// TODO
 pub fn define_enum_from_filenames(
     root: &Path,
     enum_name: &str,
@@ -513,6 +519,7 @@ fn values_from_file_contents(
         .collect::<Result<Vec<_>, _>>()
 }
 
+/// TODO
 pub fn define_structs_from_file_contents(
     root: &Path,
     struct_name: &str,

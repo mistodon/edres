@@ -1,7 +1,10 @@
+//! TODO
+
 use std::path::Path;
 
 use edres_core::Error;
 
+/// TODO
 pub fn ensure_destination(path: &Path, create_dirs: bool) -> Result<(), Error> {
     if create_dirs {
         if let Some(dir) = path.parent() {
@@ -12,6 +15,7 @@ pub fn ensure_destination(path: &Path, create_dirs: bool) -> Result<(), Error> {
     Ok(())
 }
 
+/// TODO
 pub fn write_destination(
     destination: &Path,
     output: String,

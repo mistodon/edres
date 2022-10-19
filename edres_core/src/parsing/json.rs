@@ -1,3 +1,5 @@
+//! TODO
+
 use serde_json::{self, Value as JsonValue};
 
 use crate::{
@@ -7,17 +9,20 @@ use crate::{
     value::{Struct, Value},
 };
 
+/// TODO
 pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
     let raw_value: JsonValue = serde_json::from_str(source)?;
     parse_value(raw_value, options)
 }
 
+/// TODO
 pub fn parse_value(raw_value: JsonValue, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
 }
 
+/// TODO
 pub fn parse_value_non_unified(
     raw_value: JsonValue,
     options: &ParseOptions,

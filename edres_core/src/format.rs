@@ -18,6 +18,17 @@ pub enum Format {
 }
 
 impl Format {
+    /// Matches the extension of the given filename to identify
+    /// the format of the file.
+    ///
+    /// # Examples
+    /// ```
+    /// # use edres_core::Format;
+    /// assert_eq!(
+    ///     Format::from_filename("file.yml".as_ref()).unwrap(),
+    ///     Format::Yaml,
+    /// );
+    /// ```
     pub fn from_filename(filename: &Path) -> Result<Self, Error> {
         match filename.extension() {
             Some(ext) => match ext.to_string_lossy().as_ref() {

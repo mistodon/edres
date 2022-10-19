@@ -1,3 +1,5 @@
+//! TODO
+
 use serde_yaml::{self, Value as YamlValue};
 
 use crate::{
@@ -7,17 +9,20 @@ use crate::{
     value::{Struct, Value},
 };
 
+/// TODO
 pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
     let raw_value: YamlValue = serde_yaml::from_str(source)?;
     parse_value(raw_value, options)
 }
 
+/// TODO
 pub fn parse_value(raw_value: YamlValue, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
 }
 
+/// TODO
 pub fn parse_value_non_unified(
     raw_value: YamlValue,
     options: &ParseOptions,
@@ -55,10 +60,6 @@ pub fn parse_value_non_unified(
     })
 }
 
-// TODO:
-// - yaml! to make one big kitchen-sink value
-// - test that it converts properly
-//
 #[cfg(test)]
 mod tests {
     use super::*;

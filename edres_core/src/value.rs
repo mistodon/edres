@@ -1,10 +1,14 @@
+//! TODO
+
 use indexmap::IndexMap;
 
 use crate::error::Error;
 
+/// A key-value object for representing both maps and structs.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Struct(pub(crate) IndexMap<String, Value>);
 
+/// A type alias for `Struct`.
 pub type Map = Struct;
 
 /// A generic value.

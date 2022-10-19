@@ -1,14 +1,30 @@
+//! TODO
+
 use std::borrow::Cow;
 
+/// Contains the full set of options for all public APIs
+/// in this crate.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Options {
+    /// TODO
     pub source_path_const_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub serde_support: SerdeSupport,
 
+    /// TODO
     pub parse: ParseOptions,
+
+    /// TODO
     pub structs: StructOptions,
+
+    /// TODO
     pub enums: EnumOptions,
+
+    /// TODO
     pub files: FilesOptions,
+
+    /// TODO
     pub output: OutputOptions,
 }
 
@@ -102,10 +118,16 @@ impl Default for Options {
     }
 }
 
+/// TODO
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseOptions {
+    /// TODO
     pub default_float_size: FloatSize,
+
+    /// TODO
     pub default_int_size: IntSize,
+
+    /// TODO
     pub max_array_size: Option<usize>,
 }
 
@@ -139,9 +161,13 @@ impl Default for ParseOptions {
     }
 }
 
+/// TODO
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructOptions {
+    /// TODO
     pub derived_traits: Cow<'static, [Cow<'static, str>]>,
+
+    /// TODO
     pub struct_data_const_name: Option<Cow<'static, str>>,
 }
 
@@ -188,16 +214,34 @@ impl Default for StructOptions {
     }
 }
 
+/// TODO
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumOptions {
+    /// TODO
     pub derived_traits: Cow<'static, [Cow<'static, str>]>,
+
+    /// TODO
     pub impl_default: bool,
+
+    /// TODO
     pub impl_display: bool,
+
+    /// TODO
     pub impl_from_str: bool,
+
+    /// TODO
     pub all_variants_const_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub all_values_const_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub values_struct_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub values_struct_options: StructOptions,
+
+    /// TODO
     pub get_value_fn_name: Option<Cow<'static, str>>,
 }
 
@@ -286,13 +330,25 @@ impl Default for EnumOptions {
     }
 }
 
+/// TODO
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FilesOptions {
+    /// TODO
     pub file_paths_const_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub get_path_fn_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub file_strings_const_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub get_string_fn_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub file_bytes_const_name: Option<Cow<'static, str>>,
+
+    /// TODO
     pub get_bytes_fn_name: Option<Cow<'static, str>>,
 }
 
@@ -401,9 +457,13 @@ impl Default for FilesOptions {
     }
 }
 
+/// TODO
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutputOptions {
+    /// TODO
     pub create_dirs: bool,
+
+    /// TODO
     pub write_only_if_changed: bool,
 }
 
@@ -479,14 +539,16 @@ impl Default for SerdeSupport {
     }
 }
 
-/// Represents a floating-point type.
+/// Used to specify the default size of floating point values
+/// (providing they fit within the given size).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FloatSize {
     F32,
     F64,
 }
 
-/// Represents an integer type.
+/// Used to specify the default size of integer values
+/// (providing they fit within the given size).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IntSize {
     I8,

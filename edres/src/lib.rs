@@ -1,3 +1,5 @@
+//! TODO
+
 mod files;
 
 #[cfg(not(any(feature = "json", feature = "toml", feature = "yaml",)))]
@@ -14,6 +16,7 @@ pub use edres_macros::{
 
 pub use edres_core::*;
 
+/// TODO
 pub fn generate_structs<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     struct_name: Name,
@@ -25,6 +28,7 @@ pub fn generate_structs<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
+/// TODO
 pub fn generate_structs_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     source: Source,
     struct_name: Name,
@@ -36,6 +40,7 @@ pub fn generate_structs_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
+/// TODO
 pub fn generate_structs_from_files<DirPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     struct_name: Name,
@@ -50,6 +55,7 @@ pub fn generate_structs_from_files<DirPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
+/// TODO
 pub fn generate_enum<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     enum_name: Name,
@@ -61,6 +67,7 @@ pub fn generate_enum<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
+/// TODO
 pub fn generate_enum_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     source: Source,
     enum_name: Name,
@@ -72,6 +79,7 @@ pub fn generate_enum_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
+/// TODO
 pub fn generate_enum_from_filenames<DirPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     enum_name: Name,
@@ -82,6 +90,7 @@ pub fn generate_enum_from_filenames<DirPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
+/// TODO
 pub fn create_structs<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     dest_path: DestPath,
@@ -99,6 +108,7 @@ pub fn create_structs<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<s
     Ok(())
 }
 
+/// TODO
 pub fn create_structs_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     source: Source,
     dest_path: DestPath,
@@ -117,6 +127,7 @@ pub fn create_structs_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Nam
     Ok(())
 }
 
+/// TODO
 pub fn create_structs_from_files<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     dest_path: DestPath,
@@ -134,6 +145,7 @@ pub fn create_structs_from_files<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Na
     Ok(())
 }
 
+/// TODO
 pub fn create_enum<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     dest_path: DestPath,
@@ -151,6 +163,7 @@ pub fn create_enum<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>
     Ok(())
 }
 
+/// TODO
 pub fn create_enum_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     source: Source,
     dest_path: DestPath,
@@ -169,6 +182,7 @@ pub fn create_enum_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: 
     Ok(())
 }
 
+/// TODO
 pub fn create_enum_from_filenames<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     dest_path: DestPath,
