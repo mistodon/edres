@@ -70,3 +70,42 @@ impl Value {
         }
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn assume_struct() {
+        let bads = [
+            Value::Unit,
+            Value::Bool(true),
+            Value::Char('a'),
+            Value::I8(1),
+            Value::I16(2),
+            Value::I32(3),
+            Value::I64(4),
+            Value::I128(5),
+            Value::ISize(6),
+            Value::U8(7),
+            Value::U16(8),
+            Value::U32(9),
+            Value::U64(10),
+            Value::U128(11),
+            Value::USize(12),
+            Value::F32(13.0),
+            Value::F64(14.0),
+            Value::String("String".into()),
+            Value::Option(None),
+            Value::Tuple(vec![Value::Unit]),
+            Value::Array(1, vec![Value::Unit]),
+            Value::Vec(vec![Value::Unit]),
+        ];
+        let good = Value::Struct(Struct([("key".into(), Value::Unit)].into_iter().collect()));
+
+        assert!(good.assume_struct().is_ok());
+        for bad in bads {
+            assert!(bad.assume_struct().is_err());
+        }
+    }
+}
