@@ -3,3 +3,4 @@ target/
 Cargo.lock
 *.swp
 test_edres/src/gen/*.rs
+edres/tests/output

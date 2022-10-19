@@ -22,3 +22,7 @@ yaml = ["edres_core/yaml"]
 
 [dependencies]
 edres_core = { version = "=0.6.0", path = "../edres_core" }
+
+[dev-dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
