@@ -491,7 +491,30 @@ fn establish_types_for_values<'a, I: IntoIterator<Item = &'a Value>>(
 
 // TODO: Doesn't fail if dir doesn't exist :/
 // TODO: Should be from manifest root
-/// TODO
+/// Define Rust enum based on the file names within the given
+/// directory.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use edres_core::{codegen, Options, value::*};
+/// # use quote::quote;
+/// let tokens = codegen::define_enum_from_filenames(
+///     "./my_dir".as_ref(),
+///     "FileEnum",
+///     &Options::minimal(),
+/// ).unwrap();
+///
+/// assert_eq!(tokens.to_string(), quote!(
+///     pub enum FileEnum {
+///         // From ./my_dir/file_a.toml
+///         FileA,
+///
+///         // From ./my_dir/file_b.toml
+///         FileB,
+///     }
+/// ).to_string());
+/// ```
 pub fn define_enum_from_filenames(
     root: &Path,
     enum_name: &str,
@@ -625,7 +648,34 @@ fn values_from_file_contents(
         .collect::<Result<Vec<_>, _>>()
 }
 
-/// TODO
+/// Define a set of Rust structs based on the contents of all
+/// files in the given directory.
+///
+/// # Examples
+///
+/// ```no_run
+/// # use edres_core::{codegen, Options, value::*};
+/// # use quote::quote;
+/// let tokens = codegen::define_structs_from_file_contents(
+///     "./my_dir".as_ref(),
+///     "FileStruct",
+///     None,
+///     &Options::minimal(),
+/// ).unwrap();
+///
+/// // Assuming that the toml files in ./my_dir look like:
+/// //
+/// //  field_a = 1
+/// //  field_b = 2
+///
+/// assert_eq!(tokens.to_string(), quote!(
+///     #[allow(non_camel_case_types)]
+///     pub enum FileStruct {
+///         pub field_a: i64,
+///         pub field_b: i64,
+///     }
+/// ).to_string());
+/// ```
 pub fn define_structs_from_file_contents(
     root: &Path,
     struct_name: &str,
