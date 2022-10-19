@@ -1,4 +1,4 @@
-//! TODO
+//! Contains the `Value` type - a markup-agnostic generic value.
 
 use indexmap::IndexMap;
 
@@ -7,6 +7,12 @@ use crate::error::Error;
 /// A key-value object for representing both maps and structs.
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Struct(pub(crate) IndexMap<String, Value>);
+
+impl Struct {
+    pub fn from_pairs<S: Into<String>>(pairs: impl IntoIterator<Item = (S, Value)>) -> Self {
+        Struct(pairs.into_iter().map(|(k, v)| (k.into(), v)).collect())
+    }
+}
 
 /// A type alias for `Struct`.
 pub type Map = Struct;

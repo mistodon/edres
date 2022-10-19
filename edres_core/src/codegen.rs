@@ -1,4 +1,10 @@
-//! TODO
+//! The purpose of this module is to convert generic `Values`
+//! to Rust structs and enums.
+//!
+//! Unless you are using this crate as part of a proc macro, or
+//! other library - it is likely you won't need to use this module
+//! directly. Instead, you should use the functions in the
+//! top level of this crate.
 
 use std::path::Path;
 
@@ -13,7 +19,47 @@ use crate::{
     Format,
 };
 
-/// TODO
+/// Define a set of Rust structs based on the given value.
+///
+/// While you can manually create a `Struct`, the intended way to
+/// use this crate is to either use the functions in the root of
+/// this crate, or use the `parsing` module to read `Struct`s
+/// from markup files.
+///
+/// # Examples
+///
+/// ```
+/// # use edres_core::{codegen, Options, value::*};
+/// # use quote::quote;
+/// let tokens = codegen::define_structs(
+///     &Struct::from_pairs([
+///         ("number", Value::I32(10)),
+///         ("string", Value::String("ten".into())),
+///         ("nested", Value::Struct(
+///             Struct::from_pairs([
+///                 ("boolean", Value::Bool(true)),
+///             ])
+///         )),
+///     ]),
+///     "StructName",
+///     None,
+///     &Options::minimal(),
+/// ).unwrap();
+///
+/// assert_eq!(tokens.to_string(), quote!(
+///     #[allow(non_camel_case_types)]
+///     pub struct StructName {
+///         pub number: i32,
+///         pub string: std::borrow::Cow<'static, str>,
+///         pub nested: StructName__nested,
+///     }
+///
+///     #[allow(non_camel_case_types)]
+///     pub struct StructName__nested {
+///         pub boolean: bool,
+///     }
+/// ).to_string());
+/// ```
 pub fn define_structs(
     data: &Struct,
     struct_name: &str,
@@ -308,7 +354,35 @@ where
     Ok(tokens)
 }
 
-/// TODO
+/// Define Rust enum based on the keys of the given key-value map.
+///
+/// While you can manually create a `Map`, the intended way to
+/// use this crate is to either use the functions in the root of
+/// this crate, or use the `parsing` module to read `Map`s
+/// from markup files.
+///
+/// # Examples
+///
+/// ```
+/// # use edres_core::{codegen, Options, value::*};
+/// # use quote::quote;
+/// let tokens = codegen::define_enum_from_keys(
+///     &Map::from_pairs([
+///         ("First", Value::I32(1)),
+///         ("Second", Value::I32(2)),
+///     ]),
+///     "EnumName",
+///     None,
+///     &Options::minimal(),
+/// ).unwrap();
+///
+/// assert_eq!(tokens.to_string(), quote!(
+///     pub enum EnumName {
+///         First,
+///         Second,
+///     }
+/// ).to_string());
+/// ```
 pub fn define_enum_from_keys(
     data: &Map,
     enum_name: &str,
@@ -326,7 +400,39 @@ pub fn define_enum_from_keys(
     )
 }
 
-/// TODO
+/// Define a set of Rust structs based on the values of the
+/// given key-value map.
+///
+/// While you can manually create a `Map`, the intended way to
+/// use this crate is to either use the functions in the root of
+/// this crate, or use the `parsing` module to read `Map`s
+/// from markup files.
+///
+/// # Examples
+///
+/// ```
+/// # use edres_core::{codegen, Options, value::*};
+/// # use quote::quote;
+/// let tokens = codegen::define_structs_from_values(
+///     &Map::from_pairs([
+///         ("first", Value::Struct(Struct::from_pairs([
+///             ("name", Value::String("First".into())),
+///         ]))),
+///         ("second", Value::Struct(Struct::from_pairs([
+///             ("name", Value::String("Second".into())),
+///         ]))),
+///     ]),
+///     "StructName",
+///     &Options::minimal(),
+/// ).unwrap();
+///
+/// assert_eq!(tokens.to_string(), quote!(
+///     #[allow(non_camel_case_types)]
+///     pub struct StructName {
+///         pub name: std::borrow::Cow<'static, str>,
+///     }
+/// ).to_string());
+/// ```
 pub fn define_structs_from_values(
     data: &Map,
     struct_name: &str,

@@ -16,7 +16,8 @@ pub use edres_macros::{
 
 pub use edres_core::*;
 
-/// TODO
+/// Generate Rust code that defines a set of structs based on a
+/// given markup file.
 pub fn generate_structs<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     struct_name: Name,
@@ -28,7 +29,8 @@ pub fn generate_structs<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
-/// TODO
+/// Generate Rust code that defines a set of structs based on the
+/// given markup source.
 pub fn generate_structs_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     source: Source,
     struct_name: Name,
@@ -40,7 +42,8 @@ pub fn generate_structs_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
-/// TODO
+/// Generate Rust code that defines a set of structs based on the
+/// contents of the files in the given directory.
 pub fn generate_structs_from_files<DirPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     struct_name: Name,
@@ -55,7 +58,8 @@ pub fn generate_structs_from_files<DirPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
-/// TODO
+/// Generate Rust code that defines an enum based on the map keys
+/// of the given markup file.
 pub fn generate_enum<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     enum_name: Name,
@@ -67,7 +71,8 @@ pub fn generate_enum<SrcPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
-/// TODO
+/// Generate Rust code that defines an enum based on the map keys
+/// of the given markup source.
 pub fn generate_enum_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     source: Source,
     enum_name: Name,
@@ -79,7 +84,8 @@ pub fn generate_enum_from_source<Source: AsRef<str>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
-/// TODO
+/// Generate Rust code that defines an enum based on the file names
+/// within the given directory.
 pub fn generate_enum_from_filenames<DirPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     enum_name: Name,
@@ -90,7 +96,8 @@ pub fn generate_enum_from_filenames<DirPath: AsRef<Path>, Name: AsRef<str>>(
     Ok(tokens.to_string())
 }
 
-/// TODO
+/// Create a Rust source file that defines a set of structs
+/// based on a given markup file.
 pub fn create_structs<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     dest_path: DestPath,
@@ -108,7 +115,8 @@ pub fn create_structs<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<s
     Ok(())
 }
 
-/// TODO
+/// Create a Rust source file that defines a set of structs based
+/// on the given markup source.
 pub fn create_structs_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     source: Source,
     dest_path: DestPath,
@@ -127,7 +135,8 @@ pub fn create_structs_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Nam
     Ok(())
 }
 
-/// TODO
+/// Create a Rust source file that defines a set of structs based
+/// on the contents of the files in the given directory.
 pub fn create_structs_from_files<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     dest_path: DestPath,
@@ -145,7 +154,8 @@ pub fn create_structs_from_files<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Na
     Ok(())
 }
 
-/// TODO
+/// Create a Rust source file that defines an enum based on the
+/// map keys of the given markup file.
 pub fn create_enum<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     src_path: SrcPath,
     dest_path: DestPath,
@@ -163,7 +173,8 @@ pub fn create_enum<SrcPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>
     Ok(())
 }
 
-/// TODO
+/// Create a Rust source file that defines an enum based on the
+/// map keys of the given markup source.
 pub fn create_enum_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     source: Source,
     dest_path: DestPath,
@@ -182,7 +193,8 @@ pub fn create_enum_from_source<Source: AsRef<str>, DestPath: AsRef<Path>, Name: 
     Ok(())
 }
 
-/// TODO
+/// Create a Rust source file that defines an enum based on the
+/// file names within the given directory.
 pub fn create_enum_from_filenames<DirPath: AsRef<Path>, DestPath: AsRef<Path>, Name: AsRef<str>>(
     dir_path: DirPath,
     dest_path: DestPath,

@@ -1,4 +1,5 @@
-//! TODO
+//! This module provides utilities for parsing YAML files
+//! to generic `Value`s.
 
 use serde_yaml::{self, Value as YamlValue};
 
@@ -9,20 +10,23 @@ use crate::{
     value::{Struct, Value},
 };
 
-/// TODO
+/// Parse YAML source, producing a generic `Value`.
 pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
     let raw_value: YamlValue = serde_yaml::from_str(source)?;
     parse_value(raw_value, options)
 }
 
-/// TODO
+/// Parse a YAML value, producing a generic `Value`.
 pub fn parse_value(raw_value: YamlValue, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
 }
 
-/// TODO
+/// Parse a YAML value, producing a generic `Value`.
+///
+/// This bypasses the unification step, which currently does
+/// nothing anyway.
 pub fn parse_value_non_unified(
     raw_value: YamlValue,
     options: &ParseOptions,

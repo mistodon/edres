@@ -1,4 +1,5 @@
-//! TODO
+//! This module provides utilities for parsing TOML files
+//! to generic `Value`s.
 
 use toml::{self, Value as TomlValue};
 
@@ -9,20 +10,23 @@ use crate::{
     value::{Struct, Value},
 };
 
-/// TODO
+/// Parse TOML source, producing a generic `Value`.
 pub fn parse_source(source: &str, options: &ParseOptions) -> Result<Value, Error> {
     let raw_value: TomlValue = toml::from_str(source)?;
     parse_value(raw_value, options)
 }
 
-/// TODO
+/// Parse a TOML value, producing a generic `Value`.
 pub fn parse_value(raw_value: TomlValue, options: &ParseOptions) -> Result<Value, Error> {
     let mut result = parse_value_non_unified(raw_value, options)?;
     parsing::unify_value(&mut result)?;
     Ok(result)
 }
 
-/// TODO
+/// Parse a TOML value, producing a generic `Value`.
+///
+/// This bypasses the unification step, which currently does
+/// nothing anyway.
 pub fn parse_value_non_unified(
     raw_value: TomlValue,
     options: &ParseOptions,

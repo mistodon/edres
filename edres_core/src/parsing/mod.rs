@@ -1,4 +1,9 @@
-//! TODO
+//! This module contains all of the utilities for parsing markup
+//! files.
+//!
+//! The submodules are controlled by the `edres` features set.
+//! So for example, the `json` module will only be present if
+//! the `edres/json` feature is enabled.
 
 #[cfg(feature = "json")]
 pub mod json;
@@ -18,7 +23,8 @@ use crate::{
     value::Value,
 };
 
-/// TODO
+/// Parses a source file into a generic `Value`, inferring its
+/// format.
 pub fn parse_source_file(file: &Path, options: &ParseOptions) -> Result<Value, Error> {
     let source = std::fs::read_to_string(file)?;
     let format = Format::from_filename(file)?;
@@ -38,7 +44,7 @@ pub(crate) fn parse_source_file_with_format(
     parse_source(&source, format, options)
 }
 
-/// TODO
+/// Parse source of a given format, producing a generic `Value`.
 pub fn parse_source(source: &str, format: Format, options: &ParseOptions) -> Result<Value, Error> {
     match format {
         #[cfg(feature = "json")]
@@ -52,13 +58,18 @@ pub fn parse_source(source: &str, format: Format, options: &ParseOptions) -> Res
     }
 }
 
-/// TODO
+/// Attempts to unify values internal to the given one so that
+/// their types are compatible.
+///
+/// **NOTE:** This is not currently implemented.
 pub fn unify_value(_value: &mut Value) -> Result<(), Error> {
     // TODO: unify_values in all sequences
     Ok(())
 }
 
-/// TODO
+/// Attempts to unify all provided values to compatible types.
+///
+/// **NOTE:** This is not currently implemented.
 pub fn unify_values(_values: &mut [Value]) -> Result<(), Error> {
     // TODO: Unify values in this sequence
     Ok(())

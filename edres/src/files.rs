@@ -1,10 +1,13 @@
-//! TODO
+//! Utility functions for working with output files.
 
 use std::path::Path;
 
 use edres_core::Error;
 
-/// TODO
+/// Utility function to create parent directories of a path.
+///
+/// The `create_dirs` parameter allows you to bypass this by
+/// passing `false`.
 pub fn ensure_destination(path: &Path, create_dirs: bool) -> Result<(), Error> {
     if create_dirs {
         if let Some(dir) = path.parent() {
@@ -15,7 +18,8 @@ pub fn ensure_destination(path: &Path, create_dirs: bool) -> Result<(), Error> {
     Ok(())
 }
 
-/// TODO
+/// Utility function to write output to a file, optionally only
+/// if changed.
 pub fn write_destination(
     destination: &Path,
     output: String,

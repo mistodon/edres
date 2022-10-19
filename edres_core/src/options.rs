@@ -1,4 +1,11 @@
-//! TODO
+//! This module contains the structs for configuring the behaviour of the public APIs.
+//!
+//! The main struct of this module is `Options` which contains
+//! all of the different configuration options.
+//!
+//! Most structs have a `new` constructor which contains sensible
+//! defaults, as well as a `minimal` constructor which generates
+//! as little code as possible.
 
 use std::borrow::Cow;
 
@@ -9,7 +16,7 @@ pub struct Options {
     /// TODO
     pub source_path_const_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// Controls whether generated items should derive `serde` traits.
     pub serde_support: SerdeSupport,
 
     /// TODO
@@ -118,16 +125,30 @@ impl Default for Options {
     }
 }
 
-/// TODO
+/// Options specific to how `edres` should parse markup.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ParseOptions {
-    /// TODO
+    /// The floating point type to infer from input.
+    ///
+    /// This can be either `f32` or `f64`. Values that are too
+    /// large to fit the chosen default will instead be inferred
+    /// as a larger type.
     pub default_float_size: FloatSize,
 
-    /// TODO
+    /// The integer type to infer from input.
+    ///
+    /// This can be anything from `i8` to `i128`, including
+    /// `isize`. Values that are too large to fit the chosen
+    /// default will instead be inferred as a larger type.
     pub default_int_size: IntSize,
 
-    /// TODO
+    /// What size of sequence, if any, to consider small enough
+    /// to use an array instead of a `Vec`.
+    ///
+    /// For example, if `Some(4)` is provided, then sequences of
+    /// more than 4 items in the input will generate a `Vec` in
+    /// the resulting struct. Meanwhile, a sequence of 4 values
+    /// would instead generate a `[T; 4]`.
     pub max_array_size: Option<usize>,
 }
 
@@ -161,10 +182,16 @@ impl Default for ParseOptions {
     }
 }
 
-/// TODO
+/// Options specific to how `edres` should generate structs.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct StructOptions {
-    /// TODO
+    /// A list of traits to derive.
+    ///
+    /// These can either be unqualified (like `Clone`) or
+    /// qualifier with a crate name (like `serde::Serialize`).
+    ///
+    /// See the `StructOptions::new` example to see how to easily
+    /// set this value.
     pub derived_traits: Cow<'static, [Cow<'static, str>]>,
 
     /// TODO
@@ -214,19 +241,34 @@ impl Default for StructOptions {
     }
 }
 
-/// TODO
+/// Options specific to how `edres` should generate enums.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnumOptions {
-    /// TODO
+    /// A list of traits to derive.
+    ///
+    /// These can either be unqualified (like `Clone`) or
+    /// qualifier with a crate name (like `serde::Serialize`).
+    ///
+    /// See the `EnumOptions::new` example to see how to easily
+    /// set this value.
     pub derived_traits: Cow<'static, [Cow<'static, str>]>,
 
-    /// TODO
+    /// Whether generated enums should implement the `Default`
+    /// trait.
+    ///
+    /// This uses the first variant as the default value.
     pub impl_default: bool,
 
-    /// TODO
+    /// Whether generated enums should implement `Display`.
+    ///
+    /// This just displays the name of the variant as a string.
+    /// For example, `MyEnum::First.to_string() == "First"`.
     pub impl_display: bool,
 
-    /// TODO
+    /// Whether generated enums should implement `FromStr`.
+    ///
+    /// This works by matching the name of the variant.
+    /// For example, `"First".parse().unwrap() == MyEnum::First`.
     pub impl_from_str: bool,
 
     /// TODO
@@ -457,13 +499,19 @@ impl Default for FilesOptions {
     }
 }
 
-/// TODO
+/// Options specific to how `edres` should handle its output.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OutputOptions {
-    /// TODO
+    /// If true, missing destination directories will be created
+    /// on output.
     pub create_dirs: bool,
 
-    /// TODO
+    /// If true, files will only be written if they have changed.
+    ///
+    /// Generation will still take place. This is not an
+    /// optimization, but it can be used to avoid unintentionally
+    /// triggering any processes that watch for changes. (For
+    /// example, `cargo watch`.)
     pub write_only_if_changed: bool,
 }
 
