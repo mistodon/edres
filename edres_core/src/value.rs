@@ -25,8 +25,15 @@ impl Struct {
     /// //   "another_field": 100
     /// // }
     /// ```
-    pub fn from_pairs<S: Into<String>, V: Into<Value>>(pairs: impl IntoIterator<Item = (S, V)>) -> Self {
-        Struct(pairs.into_iter().map(|(k, v)| (k.into(), v.into())).collect())
+    pub fn from_pairs<S: Into<String>, V: Into<Value>>(
+        pairs: impl IntoIterator<Item = (S, V)>,
+    ) -> Self {
+        Struct(
+            pairs
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
+        )
     }
 }
 
