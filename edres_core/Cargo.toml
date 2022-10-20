@@ -6,7 +6,7 @@ edition = "2021"
 description = "Internals for the edres crate."
 homepage = "https://github.com/mistodon/edres"
 repository = "https://github.com/mistodon/edres"
-readme = "README.md"
+readme = "../README.md"
 license = "CC0-1.0"
 
 [features]
