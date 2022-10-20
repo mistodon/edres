@@ -102,6 +102,13 @@ impl Value {
             }
         }
     }
+
+    pub(crate) fn wrap_in_option(&mut self) {
+        if !matches!(self, Value::Option(_)) {
+            let contents = std::mem::replace(self, Value::Unit);
+            *self = Value::Option(Some(Box::new(contents)));
+        }
+    }
 }
 
 #[cfg(test)]

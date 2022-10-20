@@ -236,18 +236,15 @@ where
             ];
         });
     }
-    let new_struct_tokens = match (use_values, &options.enums.all_values_const_name) {
-        (true, Some(const_name)) => {
-            let const_name = format_ident!("{}", const_name);
-
-            let struct_name = options
-                .enums
-                .values_struct_name
+    let new_struct_tokens = match (use_values, &options.enums.values_struct) {
+        (true, Some(vs_options)) => {
+            let struct_name = vs_options
+                .struct_name
                 .as_ref()
                 .map(|s| s.to_string())
                 .unwrap_or_else(|| format!("{}__Value", enum_name));
             let value_options = Options {
-                structs: options.enums.values_struct_options.clone(),
+                structs: vs_options.struct_options.clone(),
                 ..options.clone()
             };
             let (value_type, values, new_struct_tokens) =
@@ -257,19 +254,22 @@ where
                 .map(|value| define_value(value, &struct_name, None, None))
                 .collect::<Result<Vec<_>, _>>()?;
 
-            inherents.push(quote! {
-                pub const #const_name: &'static [#value_type] = &[
-                    #(#values,)*
-                ];
-            });
-
-            if let Some(get_value_fn_name) = &options.enums.get_value_fn_name {
-                let get_value_fn_name = format_ident!("{}", get_value_fn_name);
+            if let Some(const_name) = &options.enums.all_values_const_name {
+                let const_name = format_ident!("{}", const_name);
                 inherents.push(quote! {
-                    pub const fn #get_value_fn_name(self) -> &'static #value_type {
-                        &Self::#const_name[self as usize]
-                    }
+                    pub const #const_name: &'static [#value_type] = &[
+                        #(#values,)*
+                    ];
                 });
+
+                if let Some(get_value_fn_name) = &options.enums.get_value_fn_name {
+                    let get_value_fn_name = format_ident!("{}", get_value_fn_name);
+                    inherents.push(quote! {
+                        pub const fn #get_value_fn_name(self) -> &'static #value_type {
+                            &Self::#const_name[self as usize]
+                        }
+                    });
+                }
             }
 
             new_struct_tokens

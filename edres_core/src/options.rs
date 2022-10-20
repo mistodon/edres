@@ -13,25 +13,26 @@ use std::borrow::Cow;
 /// in this crate.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Options {
-    /// TODO
+    /// In present, generates a const with this name that
+    /// stores the path of the original markup file.
     pub source_path_const_name: Option<Cow<'static, str>>,
 
     /// Controls whether generated items should derive `serde` traits.
     pub serde_support: SerdeSupport,
 
-    /// TODO
+    /// See [`ParseOptions`].
     pub parse: ParseOptions,
 
-    /// TODO
+    /// See [`StructOptions`].
     pub structs: StructOptions,
 
-    /// TODO
+    /// See [`EnumOptions`].
     pub enums: EnumOptions,
 
-    /// TODO
+    /// See [`FilesOptions`].
     pub files: FilesOptions,
 
-    /// TODO
+    /// See [`OutputOptions`].
     pub output: OutputOptions,
 }
 
@@ -194,7 +195,9 @@ pub struct StructOptions {
     /// set this value.
     pub derived_traits: Cow<'static, [Cow<'static, str>]>,
 
-    /// TODO
+    /// If present, generates a const with the given name that
+    /// stores the contents of the file as a value of the generated
+    /// type.
     pub struct_data_const_name: Option<Cow<'static, str>>,
 }
 
@@ -271,19 +274,25 @@ pub struct EnumOptions {
     /// For example, `"First".parse().unwrap() == MyEnum::First`.
     pub impl_from_str: bool,
 
-    /// TODO
+    /// If present, generates a const with this name that stores
+    /// a slice of all variants of the generated enum.
     pub all_variants_const_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// If present, generates a const with this name that stores
+    /// a slice of all values corresponding to the enum variants.
+    ///
+    /// This requires `values_struct` to be set as well.
     pub all_values_const_name: Option<Cow<'static, str>>,
 
-    /// TODO
-    pub values_struct_name: Option<Cow<'static, str>>,
+    /// If present, structs representing the values associated with
+    /// enum variants will also be generated.
+    ///
+    /// The [`ValuesStructOptions`] defines further options for how
+    /// they are generated.
+    pub values_struct: Option<ValuesStructOptions>,
 
-    /// TODO
-    pub values_struct_options: StructOptions,
-
-    /// TODO
+    /// If present, generates a method with this name for fetching
+    /// the value associated with an enum variant.
     pub get_value_fn_name: Option<Cow<'static, str>>,
 }
 
@@ -305,8 +314,7 @@ impl EnumOptions {
     ///     impl_from_str: true,
     ///     all_variants_const_name: Some("ALL".into()),
     ///     all_values_const_name: Some("VALUES".into()),
-    ///     values_struct_name: None,
-    ///     values_struct_options: StructOptions::new(),
+    ///     values_struct: Some(ValuesStructOptions::new()),
     ///     get_value_fn_name: Some("get".into()),
     /// });
     /// ```
@@ -325,8 +333,7 @@ impl EnumOptions {
             impl_from_str: true,
             all_variants_const_name: Some(Cow::Borrowed("ALL")),
             all_values_const_name: Some(Cow::Borrowed("VALUES")),
-            values_struct_name: None,
-            values_struct_options: StructOptions::new(),
+            values_struct: Some(ValuesStructOptions::new()),
             get_value_fn_name: Some(Cow::Borrowed("get")),
         }
     }
@@ -341,8 +348,7 @@ impl EnumOptions {
     ///     impl_from_str: false,
     ///     all_variants_const_name: None,
     ///     all_values_const_name: None,
-    ///     values_struct_name: None,
-    ///     values_struct_options: StructOptions::minimal(),
+    ///     values_struct: None,
     ///     get_value_fn_name: None,
     /// });
     /// ```
@@ -354,8 +360,7 @@ impl EnumOptions {
             impl_from_str: false,
             all_variants_const_name: None,
             all_values_const_name: None,
-            values_struct_name: None,
-            values_struct_options: StructOptions::minimal(),
+            values_struct: None,
             get_value_fn_name: None,
         }
     }
@@ -372,25 +377,90 @@ impl Default for EnumOptions {
     }
 }
 
-/// TODO
+/// Options specific to how `edres` should generate structs for
+/// values associated with enum variants.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ValuesStructOptions {
+    /// If present, this will be the name of the struct generated
+    /// for the values corresponding to the enum variants.
+    pub struct_name: Option<Cow<'static, str>>,
+
+    /// The options for generating structs based on values
+    /// associated with the enum.
+    pub struct_options: StructOptions,
+}
+
+impl ValuesStructOptions {
+    /// # Examples
+    /// ```
+    /// # use edres_core::options::*;
+    /// assert_eq!(ValuesStructOptions::new(), ValuesStructOptions {
+    ///     struct_name: None,
+    ///     struct_options: StructOptions::new(),
+    /// });
+    /// ```
+    pub const fn new() -> Self {
+        ValuesStructOptions {
+            struct_name: None,
+            struct_options: StructOptions::new(),
+        }
+    }
+
+    /// # Examples
+    /// ```
+    /// # use edres_core::options::*;
+    /// assert_eq!(ValuesStructOptions::minimal(), ValuesStructOptions {
+    ///     struct_name: None,
+    ///     struct_options: StructOptions::minimal(),
+    /// });
+    /// ```
+    pub const fn minimal() -> Self {
+        ValuesStructOptions {
+            struct_name: None,
+            struct_options: StructOptions::minimal(),
+        }
+    }
+}
+
+impl Default for ValuesStructOptions {
+    /// # Examples
+    /// ```
+    /// # use edres_core::options::*;
+    /// assert_eq!(ValuesStructOptions::default(), ValuesStructOptions::new());
+    /// ```
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Options specific to how `edres` should handle input files.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FilesOptions {
-    /// TODO
+    /// If present, generates a const with this name containing
+    /// a slice of the paths of the files used to generate the
+    /// output.
     pub file_paths_const_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// If present, generates a method which returns the path
+    /// associated with an enum variant.
     pub get_path_fn_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// If present, generates a const with this name containing
+    /// a slice of the string contents of each file used to
+    /// generate the output.
     pub file_strings_const_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// If present, generates a method which returns the string
+    /// contents associated with an enum variant.
     pub get_string_fn_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// If present, generates a const with this name containing
+    /// a slice of the binary contents of each file used to
+    /// generate the output.
     pub file_bytes_const_name: Option<Cow<'static, str>>,
 
-    /// TODO
+    /// If present, generates a method which returns the bytes
+    /// associated with an enum variant.
     pub get_bytes_fn_name: Option<Cow<'static, str>>,
 }
 

@@ -35,6 +35,7 @@ fn enum_from_filenames_with_values() {
         &Options {
             enums: EnumOptions {
                 all_values_const_name: Some("VALUES".into()),
+                values_struct: Some(ValuesStructOptions::minimal()),
                 ..EnumOptions::minimal()
             },
             ..Options::minimal()

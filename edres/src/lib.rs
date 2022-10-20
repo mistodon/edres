@@ -1,4 +1,155 @@
-//! TODO
+//! If `serde` turns your structs into markup files,
+//!
+//! then `edres` turns your markup files into structs.
+//!
+//! This crate has three main related functionalities:
+//!
+//! 1.  Generate a set of structs representing the contents of
+//!     a single markup file.
+//! 2.  Generate an enum to represent the keys of a map in a
+//!     single markup file (and optionally structs to represent
+//!     the values).
+//! 3.  Generate an enum to represent the files of a directory
+//!     (and optionally structs to represent the contents of those
+//!     files).
+//!
+//! The crate is mainly intended to be used in `build.rs` build
+//! scripts, but could also be used inside a proc-macro. (See the
+//! [`codegen`] module.)
+//!
+//! To use this crate, make sure you enable at least one of the
+//! serde features to support the kinds of files you're using:
+//!
+//! 1. `json`
+//! 2. `toml`
+//! 3. `yaml`
+//!
+//! There are two sets of functions provided at the top level:
+//! the `create_` functions which will write a Rust source file,
+//! and the `generate_` functions which simply return Rust code as
+//! a string.
+//!
+//! # Examples
+//!
+//! ## Generating structs
+//!
+//! This example takes a single config file and generates a struct
+//! that is compatible with it:
+//!
+//! ```
+//! # use edres::*;
+//! # use quote::quote;
+//! let my_file_content = "
+//! title = \"My TOML file\"
+//!
+//! [my_table]
+//! value = 10
+//! ";
+//!
+//! let generated_code = generate_structs_from_source(
+//!     my_file_content,
+//!     "MyStruct",
+//!     Format::Toml,
+//!     &Options::minimal(),
+//! ).unwrap();
+//!
+//! assert_eq!(generated_code, quote!(
+//!     #[allow(non_camel_case_types)]
+//!     pub struct MyStruct {
+//!         pub title: std::borrow::Cow<'static, str>,
+//!         pub my_table: MyStruct__my_table,
+//!     }
+//!
+//!     #[allow(non_camel_case_types)]
+//!     pub struct MyStruct__my_table {
+//!         pub value: i64,
+//!     }
+//! ).to_string());
+//! ```
+//!
+//! ## Generating enums
+//!
+//! This example takes a single config file and generates an enum
+//! for the keys of the file, and structs for the values:
+//!
+//! ```
+//! # use edres::*;
+//! # use quote::quote;
+//! let my_file_content = "
+//!     Key1:
+//!         name: First key
+//!     Key2:
+//!         name: Second key
+//! ";
+//!
+//! let generated_code = generate_enum_from_source(
+//!     my_file_content,
+//!     "MyEnum",
+//!     Format::Yaml,
+//!     &Options {
+//!         enums: EnumOptions {
+//!             values_struct: Some(ValuesStructOptions::minimal()),
+//!             ..EnumOptions::minimal()
+//!         },
+//!         ..Options::minimal()
+//!     },
+//! ).unwrap();
+//!
+//! assert_eq!(generated_code, quote!(
+//!     pub enum MyEnum {
+//!         Key1,
+//!         Key2,
+//!     }
+//!
+//!     #[allow(non_camel_case_types)]
+//!     pub struct MyEnum__Value {
+//!         pub name: std::borrow::Cow<'static, str>,
+//!     }
+//! ).to_string());
+//! ```
+//!
+//! ## Generating file enums
+//!
+//! This example a directory full of JSON files and generates an
+//! enum variant for each file name, and a struct to represent the
+//! contents of them all.
+//!
+//! ```no_run
+//! # use edres::*;
+//! # use quote::quote;
+//! /* Example JSON file:
+//! {
+//!     "name": "file1.json",
+//!     "number": 1
+//! }
+//! */
+//!
+//! let generated_code = generate_enum_from_filenames(
+//!     "./dir_full_of_json_files",
+//!     "MyFileEnum",
+//!     &Options {
+//!         enums: EnumOptions {
+//!             values_struct: Some(ValuesStructOptions::minimal()),
+//!             ..EnumOptions::minimal()
+//!         },
+//!         ..Options::minimal()
+//!     },
+//! ).unwrap();
+//!
+//! assert_eq!(generated_code, quote!(
+//!     pub enum MyFileEnum {
+//!         File1,
+//!         File2,
+//!         File3,
+//!     }
+//!
+//!     #[allow(non_camel_case_types)]
+//!     pub struct MyFileEnum__Value {
+//!         pub name: std::borrow::Cow<'static, str>,
+//!         pub number: i32,
+//!     }
+//! ).to_string());
+//! ```
 
 mod files;
 

@@ -61,17 +61,48 @@ pub fn parse_source(source: &str, format: Format, options: &ParseOptions) -> Res
 /// Attempts to unify values internal to the given one so that
 /// their types are compatible.
 ///
-/// **NOTE:** This is not currently implemented.
-pub fn unify_value(_value: &mut Value) -> Result<(), Error> {
-    // TODO: unify_values in all sequences
+/// See [`unify_values`] for more details.
+pub fn unify_value(value: &mut Value) -> Result<(), Error> {
+    match value {
+        Value::Option(Some(inner)) => unify_value(inner)?,
+        Value::Tuple(items) => {
+            for value in items.iter_mut() {
+                unify_value(value)?;
+            }
+        }
+        Value::Array(_, items) => unify_values(items)?,
+        Value::Vec(items) => unify_values(items)?,
+        Value::Struct(inner) => {
+            for value in inner.0.values_mut() {
+                unify_value(value)?;
+            }
+        }
+        _ => (),
+    }
+
     Ok(())
 }
 
 /// Attempts to unify all provided values to compatible types.
 ///
-/// **NOTE:** This is not currently implemented.
-pub fn unify_values(_values: &mut [Value]) -> Result<(), Error> {
-    // TODO: Unify values in this sequence
+/// Currently this only ensures the following:
+///
+/// 1.  If any of the values are null, all the values are
+///     converted to Option types.
+/// 2.  This function is applied recursively to sequences within
+///     the given values.
+pub fn unify_values(values: &mut [Value]) -> Result<(), Error> {
+    for v in values.iter_mut() {
+        unify_value(v)?;
+    }
+
+    // Unify Options
+    {
+        if values.iter().any(|v| matches!(v, Value::Option(_))) {
+            values.iter_mut().for_each(Value::wrap_in_option);
+        }
+    }
+
     Ok(())
 }
 
@@ -146,5 +177,111 @@ mod tests {
             preferred_float((f32::MAX as f64) * 2.0, FloatSize::F32),
             Value::F64((f32::MAX as f64) * 2.0)
         );
+    }
+}
+
+#[cfg(test)]
+mod unify_tests {
+    use super::*;
+    use crate::value::Struct;
+
+    #[test]
+    fn unify_scalar_value_is_neutral() {
+        let vals = [
+            Value::Unit,
+            Value::Bool(true),
+            Value::Char('a'),
+            Value::I8(1),
+            Value::I16(1),
+            Value::I32(1),
+            Value::I64(1),
+            Value::I128(1),
+            Value::ISize(1),
+            Value::U8(2),
+            Value::U16(2),
+            Value::U32(2),
+            Value::U64(2),
+            Value::U128(2),
+            Value::USize(2),
+            Value::F32(3.0),
+            Value::F64(4.0),
+        ];
+
+        for mut val in vals {
+            let expected = val.clone();
+            unify_value(&mut val).unwrap();
+            assert_eq!(val, expected);
+        }
+    }
+
+    #[test]
+    fn unify_recursively_in_struct_fields() {
+        let some = |v| Value::Option(Some(Box::new(v)));
+
+        let mut value = Value::Struct(Struct::from_pairs([
+            ("vec", Value::Vec(vec![Value::Unit, some(Value::Unit)])),
+            (
+                "array",
+                Value::Array(2, vec![Value::Unit, some(Value::Unit)]),
+            ),
+        ]));
+        unify_value(&mut value).unwrap();
+
+        let expected = Value::Struct(Struct::from_pairs([
+            (
+                "vec",
+                Value::Vec(vec![some(Value::Unit), some(Value::Unit)]),
+            ),
+            (
+                "array",
+                Value::Array(2, vec![some(Value::Unit), some(Value::Unit)]),
+            ),
+        ]));
+        assert_eq!(value, expected);
+    }
+
+    #[test]
+    fn unify_option_types() {
+        let some = |v| Value::Option(Some(Box::new(v)));
+
+        let cases = [
+            (
+                vec![Value::Unit, some(Value::Unit)],
+                vec![some(Value::Unit), some(Value::Unit)],
+            ),
+            (
+                vec![Value::Option(Some(Box::new(Value::Vec(vec![
+                    Value::Unit,
+                    some(Value::Unit),
+                ]))))],
+                vec![Value::Option(Some(Box::new(Value::Vec(vec![
+                    some(Value::Unit),
+                    some(Value::Unit),
+                ]))))],
+            ),
+            (
+                vec![Value::Vec(vec![Value::Unit, some(Value::Unit)])],
+                vec![Value::Vec(vec![some(Value::Unit), some(Value::Unit)])],
+            ),
+            (
+                vec![Value::Array(2, vec![Value::Unit, some(Value::Unit)])],
+                vec![Value::Array(2, vec![some(Value::Unit), some(Value::Unit)])],
+            ),
+            (
+                vec![Value::Tuple(vec![
+                    Value::Vec(vec![Value::Unit, some(Value::Unit)]),
+                    Value::Unit,
+                ])],
+                vec![Value::Tuple(vec![
+                    Value::Vec(vec![some(Value::Unit), some(Value::Unit)]),
+                    Value::Unit,
+                ])],
+            ),
+        ];
+
+        for (mut inputs, expected) in cases {
+            unify_values(&mut inputs).unwrap();
+            assert_eq!(inputs, expected);
+        }
     }
 }
