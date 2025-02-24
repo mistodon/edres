@@ -1,4 +1,4 @@
-pub mod gen;
+pub mod autogen;
 
 #[cfg(test)]
 mod de {
@@ -23,7 +23,7 @@ macro_rules! gen_tests {
 
             #[test]
             fn deserialize_struct() {
-                use crate::gen::$modname::Struct;
+                use crate::autogen::$modname::Struct;
 
                 let src =
                     std::fs::read_to_string(format!("data/{}/struct.{}", $ext, $ext)).unwrap();
@@ -35,7 +35,7 @@ macro_rules! gen_tests {
 
             #[test]
             fn enum_keys() {
-                use crate::gen::$modname::Enum;
+                use crate::autogen::$modname::Enum;
 
                 assert_eq!(Enum::ALL, &[Enum::Variant1, Enum::Variant2]);
                 assert_eq!(Enum::Variant1.get().value, 1);
@@ -44,7 +44,7 @@ macro_rules! gen_tests {
 
             #[test]
             fn deserialize_value_structs() {
-                use crate::gen::$modname::{Enum, VStruct, DATA};
+                use crate::autogen::$modname::{DATA, Enum, VStruct};
                 use std::collections::HashMap;
 
                 let src = std::fs::read_to_string(format!("data/{}/map.{}", $ext, $ext)).unwrap();
@@ -64,7 +64,7 @@ macro_rules! gen_tests {
 
             #[test]
             fn file_enum() {
-                use crate::gen::$modname::FileEnum;
+                use crate::autogen::$modname::FileEnum;
 
                 assert_eq!(FileEnum::ALL, &[FileEnum::FileA, FileEnum::FileB]);
                 let path_a = format!("data/{}/files/file_a.{}", $ext, $ext);
@@ -76,7 +76,7 @@ macro_rules! gen_tests {
 
             #[test]
             fn deserialize_file_structs() {
-                use crate::gen::$modname::{FileEnum, FileStruct, FILE_VALUES};
+                use crate::autogen::$modname::{FILE_VALUES, FileEnum, FileStruct};
                 use std::collections::HashMap;
 
                 // NOTE: We're cloning keys here because they would usually

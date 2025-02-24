@@ -1,6 +1,6 @@
 [package]
 name = "edres_macros"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 
 [lib]
@@ -13,6 +13,6 @@ toml = ["edres_core/toml"]
 yaml = ["edres_core/yaml"]
 
 [dependencies]
-edres_core = { version="=0.6.0", path = "../edres_core" }
+edres_core = { version="=0.7.0", path = "../edres_core" }
 syn = { version="1.0", features=["full"] }
 quote = "1.0"

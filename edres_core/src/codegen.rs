@@ -12,11 +12,11 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::{
+    Format,
     error::Error,
     options::{Options, SerdeSupport},
     parsing,
     value::{Map, Struct, Value},
-    Format,
 };
 
 /// Define a set of Rust structs based on the given value.
@@ -114,7 +114,7 @@ pub fn define_structs(
 fn define_structs_inner(
     data: &Struct,
     struct_name: &str,
-    options: &Options,
+    _options: &Options,
     derives: Option<&TokenStream>,
 ) -> Result<TokenStream, Error> {
     let mut fields = vec![];
@@ -128,7 +128,7 @@ fn define_structs_inner(
 
     let sub_structs: Vec<TokenStream> = sub_structs
         .iter()
-        .map(|(name, value)| define_structs_inner(value, name, options, derives))
+        .map(|(name, value)| define_structs_inner(value, name, _options, derives))
         .collect::<Result<_, Error>>()?;
 
     let struct_name = format_ident!("{}", struct_name);
@@ -619,7 +619,7 @@ pub fn define_enum_from_filenames(
     let use_values = !values.is_empty();
 
     define_enum_from_variants_and_values(
-        filenames.into_iter(),
+        filenames,
         values.iter(),
         use_values,
         enum_name,

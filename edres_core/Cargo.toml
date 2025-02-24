@@ -1,8 +1,8 @@
 [package]
 name = "edres_core"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Vi <violet@hey.com>"]
-edition = "2021"
+edition = "2024"
 description = "Internals for the edres crate."
 homepage = "https://github.com/mistodon/edres"
 repository = "https://github.com/mistodon/edres"

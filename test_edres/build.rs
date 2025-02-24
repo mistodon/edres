@@ -1,4 +1,4 @@
-use edres::{codegen, parsing, value::Value, Options, StructOptions};
+use edres::{Options, StructOptions, codegen, parsing, value::Value};
 
 fn main() {
     build().unwrap();
