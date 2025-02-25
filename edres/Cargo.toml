@@ -1,6 +1,6 @@
 [package]
 name = "edres"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Vi <violet@hey.com>"]
 edition = "2024"
 description = "Generate struct and enum definitions from data files."
@@ -21,7 +21,7 @@ toml = ["edres_core/toml"]
 yaml = ["edres_core/yaml"]
 
 [dependencies]
-edres_core = { version = "=0.7.0", path = "../edres_core" }
+edres_core = { version = "=0.7.1", path = "../edres_core" }
 
 [dev-dependencies]
 proc-macro2 = "1.0"

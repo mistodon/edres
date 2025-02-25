@@ -1,6 +1,6 @@
 [package]
 name = "edres_core"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Vi <violet@hey.com>"]
 edition = "2024"
 description = "Internals for the edres crate."
